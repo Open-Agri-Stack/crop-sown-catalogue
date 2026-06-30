@@ -91,7 +91,22 @@ src/main/java/com/catalogue/verg/
 │   └── util/             # Shared configuration and utility classes (e.g. VergProperties)
 ├── livestock/
 │   └── service/impl/     # Livestock service implementation
-└── ...                   # Additional entity-specific packages (cropType, cropCategory, etc.)
+├── cropCategory/
+│   └── service/impl/     # Crop Category service implementation
+├── cropType/
+│   └── service/impl/     # Crop Type service implementation
+├── cropVariety/
+│   └── service/impl/     # Crop Variety service implementation
+├── soil/
+│   └── service/impl/     # Soil service implementation
+├── seed/
+│   └── service/impl/     # Seed service implementation
+├── extensionservices/
+│   └── service/impl/     # Extension service implementation
+├── fertilizer/
+│   └── service/impl/     # Fertilizer service implementation
+├── location/
+│   └── service/impl/     # Location service implementation           
 ```
 
 ## Contributing
