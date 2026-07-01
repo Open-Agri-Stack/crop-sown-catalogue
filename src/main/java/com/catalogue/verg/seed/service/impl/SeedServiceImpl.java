@@ -18,6 +18,7 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.seed.entity.SeedEntity;
 import com.catalogue.verg.seed.repository.SeedRepository;
 import com.catalogue.verg.seed.service.SeedService;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 public class SeedServiceImpl implements SeedService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private SeedRepository seedRepository;
@@ -78,8 +82,7 @@ public class SeedServiceImpl implements SeedService {
             log.info("SeedServiceImpl::createSeed:creating seed");
             SeedEntity seedEntity1 = new SeedEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.SEED_VALIDATION_FILE_JSON);
             seedEntity1.setSeedId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +95,7 @@ public class SeedServiceImpl implements SeedService {
 
             log.info("SeedServiceImpl::createSeed::persisted seed in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("SeedID",
-                    seedEntity.get(Constants.SEED_ID_RQST).asText());
+            //            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) seedEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.SEED_INDEX_NAME, Constants.INDEX_TYPE,

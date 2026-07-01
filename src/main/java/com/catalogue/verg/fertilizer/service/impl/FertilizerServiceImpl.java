@@ -18,6 +18,7 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.fertilizer.entity.FertilizerEntity;
 import com.catalogue.verg.fertilizer.repository.FertilizerRepository;
 import com.catalogue.verg.fertilizer.service.FertilizerService;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 public class FertilizerServiceImpl implements FertilizerService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private FertilizerRepository fertilizerRepository;
@@ -78,8 +82,7 @@ public class FertilizerServiceImpl implements FertilizerService {
             log.info("FertilizerServiceImpl::createFertilizer:creating fertilizer");
             FertilizerEntity fertilizerEntity1 = new FertilizerEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.FERTILIZER_VALIDATION_FILE_JSON);
             fertilizerEntity1.setFertilizerId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +95,7 @@ public class FertilizerServiceImpl implements FertilizerService {
 
             log.info("FertilizerServiceImpl::createFertilizer::persisted fertilizer in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("FertilizerID",
-                    fertilizerEntity.get(Constants.FERTILIZER_ID_RQST).asText());
+            //            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) fertilizerEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.FERTILIZER_INDEX_NAME, Constants.INDEX_TYPE,

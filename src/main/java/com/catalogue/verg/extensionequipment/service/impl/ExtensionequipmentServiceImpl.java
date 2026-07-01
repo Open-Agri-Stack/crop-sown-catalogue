@@ -18,6 +18,7 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.extensionequipment.entity.ExtensionequipmentEntity;
 import com.catalogue.verg.extensionequipment.repository.ExtensionequipmentRepository;
 import com.catalogue.verg.extensionequipment.service.ExtensionequipmentService;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 public class ExtensionequipmentServiceImpl implements ExtensionequipmentService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private ExtensionequipmentRepository extensionequipmentRepository;
@@ -78,8 +82,7 @@ public class ExtensionequipmentServiceImpl implements ExtensionequipmentService 
             log.info("ExtensionequipmentServiceImpl::createExtensionequipment:creating extensionequipment");
             ExtensionequipmentEntity extensionequipmentEntity1 = new ExtensionequipmentEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.EXTENSIONEQUIPMENT_VALIDATION_FILE_JSON);
             extensionequipmentEntity1.setExtensionequipmentId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +95,7 @@ public class ExtensionequipmentServiceImpl implements ExtensionequipmentService 
 
             log.info("ExtensionequipmentServiceImpl::createExtensionequipment::persisted extensionequipment in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("ExtensionequipmentID",
-                    extensionequipmentEntity.get(Constants.EXTENSIONEQUIPMENT_ID_RQST).asText());
+            //            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) extensionequipmentEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.EXTENSIONEQUIPMENT_INDEX_NAME, Constants.INDEX_TYPE,

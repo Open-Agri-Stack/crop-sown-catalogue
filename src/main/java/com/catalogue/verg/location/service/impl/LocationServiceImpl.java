@@ -18,6 +18,7 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.location.entity.LocationEntity;
 import com.catalogue.verg.location.repository.LocationRepository;
 import com.catalogue.verg.location.service.LocationService;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 public class LocationServiceImpl implements LocationService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private LocationRepository locationRepository;
@@ -78,8 +82,7 @@ public class LocationServiceImpl implements LocationService {
             log.info("LocationServiceImpl::createLocation:creating location");
             LocationEntity locationEntity1 = new LocationEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.LOCATION_VALIDATION_FILE_JSON);
             locationEntity1.setLocationId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +95,7 @@ public class LocationServiceImpl implements LocationService {
 
             log.info("LocationServiceImpl::createLocation::persisted location in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("LocationID",
-                    locationEntity.get(Constants.LOCATION_ID_RQST).asText());
+            //            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) locationEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.LOCATION_INDEX_NAME, Constants.INDEX_TYPE,

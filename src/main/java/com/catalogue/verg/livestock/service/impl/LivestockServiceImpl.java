@@ -18,6 +18,7 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.livestock.entity.LivestockEntity;
 import com.catalogue.verg.livestock.repository.LivestockRepository;
 import com.catalogue.verg.livestock.service.LivestockService;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 public class LivestockServiceImpl implements LivestockService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private LivestockRepository livestockRepository;
@@ -78,8 +82,7 @@ public class LivestockServiceImpl implements LivestockService {
             log.info("LivestockServiceImpl::createLivestock:creating livestock");
             LivestockEntity livestockEntity1 = new LivestockEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.LIVESTOCK_VALIDATION_FILE_JSON);
             livestockEntity1.setLivestockId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +95,7 @@ public class LivestockServiceImpl implements LivestockService {
 
             log.info("LivestockServiceImpl::createLivestock::persisted livestock in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("LivestockID",
-                    livestockEntity.get(Constants.LIVESTOCK_ID_RQST).asText());
+            //            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) livestockEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.LIVESTOCK_INDEX_NAME, Constants.INDEX_TYPE,

@@ -32,4 +32,10 @@ public class CropcategoryController {
         CustomResponse response = cropcategoryService.read(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @DeleteMapping("/v1/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        CustomResponse response = cropcategoryService.delete(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
