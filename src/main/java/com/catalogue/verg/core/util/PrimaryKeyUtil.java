@@ -17,16 +17,31 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PrimaryKeyUtil {
 
+    public static final int DEFAULT_KEY_LENGTH = 12;
+
     private final ObjectMapper objectMapper;
 
     public String generateKey(String fileName) {
         log.info("PrimaryKeyUtil::generateKey::reading schema: {}", fileName);
-        String prefix = extractPrefixFromSchema(fileName);
+        JsonNode primaryKeyProperty = extractPrimaryKeyProperty(fileName);
+        String prefix = extractPrefix(primaryKeyProperty);
+        int keyLength = extractKeyLength(primaryKeyProperty);
+        return buildKey(prefix, keyLength);
+    }
+
+//    public String generateKey(String fileName, int keyLength) {
+//        log.info("PrimaryKeyUtil::generateKey::reading schema: {}", fileName);
+//        JsonNode primaryKeyProperty = extractPrimaryKeyProperty(fileName);
+//        String prefix = extractPrefix(primaryKeyProperty);
+//        return buildKey(prefix, keyLength);
+//    }
+
+    private String buildKey(String prefix, int keyLength) {
         UUID idUuid = Uuids.timeBased();
 
         if (prefix != null) {
-            String key = prefix + generateRandomDigits();
-            log.info("PrimaryKeyUtil::generateKey::generated prefix+random key: {}+{}",prefix, key);
+            String key = prefix + generateRandomDigits(keyLength);
+            log.info("PrimaryKeyUtil::generateKey::generated prefix+random key: {}+{} (length {})", prefix, key, keyLength);
             return key;
         } else {
             log.info("PrimaryKeyUtil::generateKey::no prefix found, falling back to UUID");
@@ -34,11 +49,11 @@ public class PrimaryKeyUtil {
         }
     }
 
-    private String extractPrefixFromSchema(String fileName) {
+    private JsonNode extractPrimaryKeyProperty(String fileName) {
         try {
             InputStream schemaStream = getClass().getResourceAsStream(fileName);
             if (schemaStream == null) {
-                log.warn("PrimaryKeyUtil::extractPrefixFromSchema::schema file not found: {}", fileName);
+                log.warn("PrimaryKeyUtil::extractPrimaryKeyProperty::schema file not found: {}", fileName);
                 return null;
             }
             JsonNode schemaNode = objectMapper.readTree(schemaStream);
@@ -47,23 +62,42 @@ public class PrimaryKeyUtil {
             if (properties != null) {
                 for (JsonNode property : properties) {
                     // Look for any property that has BOTH "prefix" and "key" attributes
-                    if (property.has("prefix") && property.has("key")&& property.get("key").asText().equalsIgnoreCase("primary")) {
-                        String prefix = property.get("prefix").asText();
-                        log.debug("PrimaryKeyUtil::extractPrefixFromSchema::found prefix: {}", prefix);
-                        return prefix;
+                    if (property.has("prefix") && property.has("key") && property.get("key").asText().equalsIgnoreCase("primary")) {
+                        return property;
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("PrimaryKeyUtil::extractPrefixFromSchema::error parsing schema file", e);
+            log.error("PrimaryKeyUtil::extractPrimaryKeyProperty::error parsing schema file", e);
         }
         return null;
     }
 
-    private String generateRandomDigits() {
+    private String extractPrefix(JsonNode primaryKeyProperty) {
+        if (primaryKeyProperty == null) {
+            return null;
+        }
+        String prefix = primaryKeyProperty.get("prefix").asText();
+        log.debug("PrimaryKeyUtil::extractPrefix::found prefix: {}", prefix);
+        return prefix;
+    }
+
+    private int extractKeyLength(JsonNode primaryKeyProperty) {
+        if (primaryKeyProperty != null && primaryKeyProperty.has("keyLength")) {
+            int keyLength = primaryKeyProperty.get("keyLength").asInt();
+            if (keyLength > 0) {
+                log.debug("PrimaryKeyUtil::extractKeyLength::found keyLength: {}", keyLength);
+                return keyLength;
+            }
+            log.warn("PrimaryKeyUtil::extractKeyLength::invalid keyLength {}, falling back to default {}", keyLength, DEFAULT_KEY_LENGTH);
+        }
+        return DEFAULT_KEY_LENGTH;
+    }
+
+    private String generateRandomDigits(int count) {
         SecureRandom random = new SecureRandom();
         StringBuilder digits = new StringBuilder();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < count; i++) {
             digits.append(random.nextInt(10));
         }
         return digits.toString();

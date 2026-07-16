@@ -159,6 +159,7 @@ class CreateRegistry:
                     "type": "string",
                     "prefix": f"{self.lower}-",
                     "key": "Primary",
+                    "keyLength": 12,
                     "description": f"description about {self.camel}Id"
                 }
             },

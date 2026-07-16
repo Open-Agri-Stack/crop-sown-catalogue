@@ -73,24 +73,6 @@ public class Constants{
     public static final String SEED_INDEX_NAME = "seed_index";
 
     
-    // Croptype Specific Constants
-    public static final String CROPTYPE_VALIDATION_FILE_JSON = "/payloadValidation/croptypePayloadValidation.json";
-    public static final String CROPTYPE_ID_RQST = "croptypeId";
-    public static final String CROPTYPE_INDEX_NAME = "croptype_index";
-
-    
-    // Cropcategory Specific Constants
-    public static final String CROPCATEGORY_VALIDATION_FILE_JSON = "/payloadValidation/cropcategoryPayloadValidation.json";
-    public static final String CROPCATEGORY_ID_RQST = "cropcategoryId";
-    public static final String CROPCATEGORY_INDEX_NAME = "cropcategory_index";
-
-    
-    // Cropvariety Specific Constants
-    public static final String CROPVARIETY_VALIDATION_FILE_JSON = "/payloadValidation/cropvarietyPayloadValidation.json";
-    public static final String CROPVARIETY_ID_RQST = "cropvarietyId";
-    public static final String CROPVARIETY_INDEX_NAME = "cropvariety_index";
-
-    
     // Livestock Specific Constants
     public static final String LIVESTOCK_VALIDATION_FILE_JSON = "/payloadValidation/livestockPayloadValidation.json";
     public static final String LIVESTOCK_ID_RQST = "livestockId";
@@ -137,6 +119,24 @@ public class Constants{
     public static final String LOCATION_VALIDATION_FILE_JSON = "/payloadValidation/locationPayloadValidation.json";
     public static final String LOCATION_ID_RQST = "locationId";
     public static final String LOCATION_INDEX_NAME = "location_index";
+
+    
+    // Croptype Specific Constants
+    public static final String CROPTYPE_VALIDATION_FILE_JSON = "/payloadValidation/croptypePayloadValidation.json";
+    public static final String CROPTYPE_ID_RQST = "croptypeId";
+    public static final String CROPTYPE_INDEX_NAME = "croptype_index";
+
+    
+    // Cropcategory Specific Constants
+    public static final String CROPCATEGORY_VALIDATION_FILE_JSON = "/payloadValidation/cropcategoryPayloadValidation.json";
+    public static final String CROPCATEGORY_ID_RQST = "cropcategoryId";
+    public static final String CROPCATEGORY_INDEX_NAME = "cropcategory_index";
+
+    
+    // Cropvariety Specific Constants
+    public static final String CROPVARIETY_VALIDATION_FILE_JSON = "/payloadValidation/cropvarietyPayloadValidation.json";
+    public static final String CROPVARIETY_ID_RQST = "cropvarietyId";
+    public static final String CROPVARIETY_INDEX_NAME = "cropvariety_index";
 
         private Constants() {
     }

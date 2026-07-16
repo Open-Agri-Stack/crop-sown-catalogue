@@ -6,6 +6,7 @@
             "type": "string",
             "prefix": "seed-",
             "key": "Primary",
+            "keyLength": 12,
             "description": "description about seedId"
         }
     },

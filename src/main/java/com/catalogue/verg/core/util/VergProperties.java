@@ -23,16 +23,6 @@ public class VergProperties {
     
         @Value("${elastic.required.field.seed.json.path}")
         private String elasticSeedJsonPath;
-    
-        @Value("${elastic.required.field.croptype.json.path}")
-        private String elasticCroptypeJsonPath;
-    
-        @Value("${elastic.required.field.cropcategory.json.path}")
-        private String elasticCropcategoryJsonPath;
-    
-        @Value("${elastic.required.field.cropvariety.json.path}")
-        private String elasticCropvarietyJsonPath;
-    
         @Value("${elastic.required.field.livestock.json.path}")
         private String elasticLivestockJsonPath;
     
@@ -56,4 +46,13 @@ public class VergProperties {
     
         @Value("${elastic.required.field.location.json.path}")
         private String elasticLocationJsonPath;
+    
+        @Value("${elastic.required.field.croptype.json.path}")
+        private String elasticCroptypeJsonPath;
+    
+        @Value("${elastic.required.field.cropcategory.json.path}")
+        private String elasticCropcategoryJsonPath;
+    
+        @Value("${elastic.required.field.cropvariety.json.path}")
+        private String elasticCropvarietyJsonPath;
     }

@@ -6,18 +6,25 @@
             "type": "string",
             "prefix": "cropcategory-",
             "key": "Primary",
+            "keyLength": 5,
             "description": "crop category prefix"
         },
         "Name": {
-            "type": "string"
-        },
-        "Code": {
             "type": "string",
-            "description": "Phone number of the lead"
+            "description": "name of the crop category"
+        },
+        "Image Url": {
+            "type": "string",
+            "description": "image url of the crop category"
+        },
+        "Description": {
+            "type": "string",
+            "description": "description of the crop category"
         }
+
     },
     "required": [
         "Name",
-        "Code"
+        "Image Url"
     ]
 }
