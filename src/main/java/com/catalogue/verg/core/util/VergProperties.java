@@ -20,42 +20,9 @@ public class VergProperties {
 
         @Value("${elastic.required.field.sample.json.path}")
         private String elasticSampleJsonPath;
-
-    
-        @Value("${elastic.required.field.oascroptype.json.path}")
-        private String elasticOascroptypeJsonPath;
-    
-        @Value("${elastic.required.field.oascropcategory.json.path}")
-        private String elasticOascropcategoryJsonPath;
-        @Value("${elastic.required.field.oasseason.json.path}")
-        private String elasticOasseasonJsonPath;
-    
-        @Value("${elastic.required.field.oascropvariety.json.path}")
-        private String elasticOascropvarietyJsonPath;
-    
-        @Value("${elastic.required.field.oaspesticide.json.path}")
-        private String elasticOaspesticideJsonPath;
-    
-        @Value("${elastic.required.field.oasinsectiside.json.path}")
-        private String elasticOasinsectisideJsonPath;
-    
-        @Value("${elastic.required.field.oasfertilizer.json.path}")
-        private String elasticOasfertilizerJsonPath;
-        @Value("${elastic.required.field.oassoil.json.path}")
-        private String elasticOassoilJsonPath;
     
         @Value("${elastic.required.field.seed.json.path}")
         private String elasticSeedJsonPath;
-    
-        @Value("${elastic.required.field.croptype.json.path}")
-        private String elasticCroptypeJsonPath;
-    
-        @Value("${elastic.required.field.cropcategory.json.path}")
-        private String elasticCropcategoryJsonPath;
-    
-        @Value("${elastic.required.field.cropvariety.json.path}")
-        private String elasticCropvarietyJsonPath;
-    
         @Value("${elastic.required.field.livestock.json.path}")
         private String elasticLivestockJsonPath;
     
@@ -79,4 +46,13 @@ public class VergProperties {
     
         @Value("${elastic.required.field.location.json.path}")
         private String elasticLocationJsonPath;
+    
+        @Value("${elastic.required.field.croptype.json.path}")
+        private String elasticCroptypeJsonPath;
+    
+        @Value("${elastic.required.field.cropcategory.json.path}")
+        private String elasticCropcategoryJsonPath;
+    
+        @Value("${elastic.required.field.cropvariety.json.path}")
+        private String elasticCropvarietyJsonPath;
     }

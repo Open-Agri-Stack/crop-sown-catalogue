@@ -18,6 +18,8 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.service.ImportService;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.pesticide.entity.PesticideEntity;
 import com.catalogue.verg.pesticide.repository.PesticideRepository;
 import com.catalogue.verg.pesticide.service.PesticideService;
@@ -31,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class PesticideServiceImpl implements PesticideService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private PesticideRepository pesticideRepository;
@@ -62,6 +69,9 @@ public class PesticideServiceImpl implements PesticideService {
     @Autowired
     private VergProperties vergProperties;
 
+    @Autowired
+    private ImportService importService;
+
     private Logger logger = LoggerFactory.getLogger(PesticideServiceImpl.class);
 
     @Value("${spring.redis.cacheTtl}")
@@ -78,8 +88,7 @@ public class PesticideServiceImpl implements PesticideService {
             log.info("PesticideServiceImpl::createPesticide:creating pesticide");
             PesticideEntity pesticideEntity1 = new PesticideEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.PESTICIDE_VALIDATION_FILE_JSON);
             pesticideEntity1.setPesticideId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +101,7 @@ public class PesticideServiceImpl implements PesticideService {
 
             log.info("PesticideServiceImpl::createPesticide::persisted pesticide in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("PesticideID",
-                    pesticideEntity.get(Constants.PESTICIDE_ID_RQST).asText());
+//            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) pesticideEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.PESTICIDE_INDEX_NAME, Constants.INDEX_TYPE,
@@ -103,7 +111,7 @@ public class PesticideServiceImpl implements PesticideService {
             map.put(Constants.PESTICIDE_ID_RQST, primaryID);
             response.setResult(map);
             response.setResponseCode(HttpStatus.OK);
-            log.info("PesticideServiceImpl::createPesticide::persisted pesticide in Verg");
+            log.info("PesticideServiceImpl::createPesticide::persisted pesticide in OAS");
             return response;
 
         } catch (Exception e) {
@@ -197,7 +205,70 @@ public class PesticideServiceImpl implements PesticideService {
 
     @Override
     public CustomResponse delete(String id) {
-        return null;
+        log.info("PesticideServiceImpl::delete:inside the method with id: {}", id);
+        CustomResponse response = new CustomResponse();
+
+        // Validate that the ID is not null or empty
+        if (StringUtils.isEmpty(id)) {
+            log.warn("PesticideServiceImpl::delete:id is null or empty");
+            response.setResponseCode(HttpStatus.BAD_REQUEST);
+            response.setMessage(Constants.ID_NOT_FOUND);
+            return response;
+        }
+
+        try {
+            // Check if the entity exists in the database
+            Optional<PesticideEntity> entityOptional = pesticideRepository.findById(id);
+            if (entityOptional.isEmpty()) {
+                log.warn("PesticideServiceImpl::delete:no record found for id: {}", id);
+                response.setResponseCode(HttpStatus.NOT_FOUND);
+                response.setMessage(Constants.INVALID_ID);
+                return response;
+            }
+
+            PesticideEntity pesticideEntity = entityOptional.get();
+
+            // Check if the entity is already deleted (soft-deleted)
+            if (Constants.IN_ACTIVE.equals(pesticideEntity.getStatus())) {
+                log.warn("PesticideServiceImpl::delete:record already deleted for id: {}", id);
+                response.setResponseCode(HttpStatus.BAD_REQUEST);
+                response.setMessage("Record is already deleted");
+                return response;
+            }
+
+            // Soft delete: update the status to INACTIVE and set updatedOn timestamp
+            pesticideEntity.setStatus(Constants.IN_ACTIVE);
+            pesticideEntity.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            pesticideRepository.save(pesticideEntity);
+            log.info("PesticideServiceImpl::delete:soft deleted record in postgres for id: {}", id);
+
+            // Remove document from Elasticsearch
+            esUtilService.deleteDocument(id, Constants.PESTICIDE_INDEX_NAME);
+            log.info("PesticideServiceImpl::delete:deleted document from elasticsearch for id: {}", id);
+
+            // Remove from Redis cache
+            cacheService.deleteCache(id);
+            log.info("PesticideServiceImpl::delete:evicted cache for id: {}", id);
+
+            response.setMessage(Constants.SUCCESSFULLY_DELETED);
+            response.setResponseCode(HttpStatus.OK);
+            return response;
+
+        } catch (Exception e) {
+            log.error("PesticideServiceImpl::delete:error while deleting record for id: {}", id, e);
+            throw new CustomException(Constants.ERROR, "error while deleting record",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public CustomResponse importData(MultipartFile file) {
+        log.info("PesticideServiceImpl::importData::started");
+        return importService.processBulkImport(
+                file,
+                Constants.PESTICIDE_VALIDATION_FILE_JSON,
+                this::createPesticide
+        );
     }
 
     public void createSuccessResponse(CustomResponse response) {

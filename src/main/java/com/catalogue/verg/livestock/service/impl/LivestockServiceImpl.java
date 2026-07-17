@@ -18,6 +18,8 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.service.ImportService;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.livestock.entity.LivestockEntity;
 import com.catalogue.verg.livestock.repository.LivestockRepository;
 import com.catalogue.verg.livestock.service.LivestockService;
@@ -31,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class LivestockServiceImpl implements LivestockService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private LivestockRepository livestockRepository;
@@ -62,6 +69,9 @@ public class LivestockServiceImpl implements LivestockService {
     @Autowired
     private VergProperties vergProperties;
 
+    @Autowired
+    private ImportService importService;
+
     private Logger logger = LoggerFactory.getLogger(LivestockServiceImpl.class);
 
     @Value("${spring.redis.cacheTtl}")
@@ -78,8 +88,7 @@ public class LivestockServiceImpl implements LivestockService {
             log.info("LivestockServiceImpl::createLivestock:creating livestock");
             LivestockEntity livestockEntity1 = new LivestockEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.LIVESTOCK_VALIDATION_FILE_JSON);
             livestockEntity1.setLivestockId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +101,7 @@ public class LivestockServiceImpl implements LivestockService {
 
             log.info("LivestockServiceImpl::createLivestock::persisted livestock in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("LivestockID",
-                    livestockEntity.get(Constants.LIVESTOCK_ID_RQST).asText());
+//            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) livestockEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.LIVESTOCK_INDEX_NAME, Constants.INDEX_TYPE,
@@ -103,7 +111,7 @@ public class LivestockServiceImpl implements LivestockService {
             map.put(Constants.LIVESTOCK_ID_RQST, primaryID);
             response.setResult(map);
             response.setResponseCode(HttpStatus.OK);
-            log.info("LivestockServiceImpl::createLivestock::persisted livestock in Verg");
+            log.info("LivestockServiceImpl::createLivestock::persisted livestock in OAS");
             return response;
 
         } catch (Exception e) {
@@ -197,7 +205,70 @@ public class LivestockServiceImpl implements LivestockService {
 
     @Override
     public CustomResponse delete(String id) {
-        return null;
+        log.info("LivestockServiceImpl::delete:inside the method with id: {}", id);
+        CustomResponse response = new CustomResponse();
+
+        // Validate that the ID is not null or empty
+        if (StringUtils.isEmpty(id)) {
+            log.warn("LivestockServiceImpl::delete:id is null or empty");
+            response.setResponseCode(HttpStatus.BAD_REQUEST);
+            response.setMessage(Constants.ID_NOT_FOUND);
+            return response;
+        }
+
+        try {
+            // Check if the entity exists in the database
+            Optional<LivestockEntity> entityOptional = livestockRepository.findById(id);
+            if (entityOptional.isEmpty()) {
+                log.warn("LivestockServiceImpl::delete:no record found for id: {}", id);
+                response.setResponseCode(HttpStatus.NOT_FOUND);
+                response.setMessage(Constants.INVALID_ID);
+                return response;
+            }
+
+            LivestockEntity livestockEntity = entityOptional.get();
+
+            // Check if the entity is already deleted (soft-deleted)
+            if (Constants.IN_ACTIVE.equals(livestockEntity.getStatus())) {
+                log.warn("LivestockServiceImpl::delete:record already deleted for id: {}", id);
+                response.setResponseCode(HttpStatus.BAD_REQUEST);
+                response.setMessage("Record is already deleted");
+                return response;
+            }
+
+            // Soft delete: update the status to INACTIVE and set updatedOn timestamp
+            livestockEntity.setStatus(Constants.IN_ACTIVE);
+            livestockEntity.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            livestockRepository.save(livestockEntity);
+            log.info("LivestockServiceImpl::delete:soft deleted record in postgres for id: {}", id);
+
+            // Remove document from Elasticsearch
+            esUtilService.deleteDocument(id, Constants.LIVESTOCK_INDEX_NAME);
+            log.info("LivestockServiceImpl::delete:deleted document from elasticsearch for id: {}", id);
+
+            // Remove from Redis cache
+            cacheService.deleteCache(id);
+            log.info("LivestockServiceImpl::delete:evicted cache for id: {}", id);
+
+            response.setMessage(Constants.SUCCESSFULLY_DELETED);
+            response.setResponseCode(HttpStatus.OK);
+            return response;
+
+        } catch (Exception e) {
+            log.error("LivestockServiceImpl::delete:error while deleting record for id: {}", id, e);
+            throw new CustomException(Constants.ERROR, "error while deleting record",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public CustomResponse importData(MultipartFile file) {
+        log.info("LivestockServiceImpl::importData::started");
+        return importService.processBulkImport(
+                file,
+                Constants.LIVESTOCK_VALIDATION_FILE_JSON,
+                this::createLivestock
+        );
     }
 
     public void createSuccessResponse(CustomResponse response) {

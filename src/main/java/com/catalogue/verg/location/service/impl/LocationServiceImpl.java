@@ -18,6 +18,8 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.service.ImportService;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.location.entity.LocationEntity;
 import com.catalogue.verg.location.repository.LocationRepository;
 import com.catalogue.verg.location.service.LocationService;
@@ -31,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class LocationServiceImpl implements LocationService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private LocationRepository locationRepository;
@@ -62,6 +69,9 @@ public class LocationServiceImpl implements LocationService {
     @Autowired
     private VergProperties vergProperties;
 
+    @Autowired
+    private ImportService importService;
+
     private Logger logger = LoggerFactory.getLogger(LocationServiceImpl.class);
 
     @Value("${spring.redis.cacheTtl}")
@@ -78,8 +88,7 @@ public class LocationServiceImpl implements LocationService {
             log.info("LocationServiceImpl::createLocation:creating location");
             LocationEntity locationEntity1 = new LocationEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.LOCATION_VALIDATION_FILE_JSON);
             locationEntity1.setLocationId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +101,7 @@ public class LocationServiceImpl implements LocationService {
 
             log.info("LocationServiceImpl::createLocation::persisted location in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("LocationID",
-                    locationEntity.get(Constants.LOCATION_ID_RQST).asText());
+//            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) locationEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.LOCATION_INDEX_NAME, Constants.INDEX_TYPE,
@@ -103,7 +111,7 @@ public class LocationServiceImpl implements LocationService {
             map.put(Constants.LOCATION_ID_RQST, primaryID);
             response.setResult(map);
             response.setResponseCode(HttpStatus.OK);
-            log.info("LocationServiceImpl::createLocation::persisted location in Verg");
+            log.info("LocationServiceImpl::createLocation::persisted location in OAS");
             return response;
 
         } catch (Exception e) {
@@ -197,7 +205,70 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public CustomResponse delete(String id) {
-        return null;
+        log.info("LocationServiceImpl::delete:inside the method with id: {}", id);
+        CustomResponse response = new CustomResponse();
+
+        // Validate that the ID is not null or empty
+        if (StringUtils.isEmpty(id)) {
+            log.warn("LocationServiceImpl::delete:id is null or empty");
+            response.setResponseCode(HttpStatus.BAD_REQUEST);
+            response.setMessage(Constants.ID_NOT_FOUND);
+            return response;
+        }
+
+        try {
+            // Check if the entity exists in the database
+            Optional<LocationEntity> entityOptional = locationRepository.findById(id);
+            if (entityOptional.isEmpty()) {
+                log.warn("LocationServiceImpl::delete:no record found for id: {}", id);
+                response.setResponseCode(HttpStatus.NOT_FOUND);
+                response.setMessage(Constants.INVALID_ID);
+                return response;
+            }
+
+            LocationEntity locationEntity = entityOptional.get();
+
+            // Check if the entity is already deleted (soft-deleted)
+            if (Constants.IN_ACTIVE.equals(locationEntity.getStatus())) {
+                log.warn("LocationServiceImpl::delete:record already deleted for id: {}", id);
+                response.setResponseCode(HttpStatus.BAD_REQUEST);
+                response.setMessage("Record is already deleted");
+                return response;
+            }
+
+            // Soft delete: update the status to INACTIVE and set updatedOn timestamp
+            locationEntity.setStatus(Constants.IN_ACTIVE);
+            locationEntity.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            locationRepository.save(locationEntity);
+            log.info("LocationServiceImpl::delete:soft deleted record in postgres for id: {}", id);
+
+            // Remove document from Elasticsearch
+            esUtilService.deleteDocument(id, Constants.LOCATION_INDEX_NAME);
+            log.info("LocationServiceImpl::delete:deleted document from elasticsearch for id: {}", id);
+
+            // Remove from Redis cache
+            cacheService.deleteCache(id);
+            log.info("LocationServiceImpl::delete:evicted cache for id: {}", id);
+
+            response.setMessage(Constants.SUCCESSFULLY_DELETED);
+            response.setResponseCode(HttpStatus.OK);
+            return response;
+
+        } catch (Exception e) {
+            log.error("LocationServiceImpl::delete:error while deleting record for id: {}", id, e);
+            throw new CustomException(Constants.ERROR, "error while deleting record",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public CustomResponse importData(MultipartFile file) {
+        log.info("LocationServiceImpl::importData::started");
+        return importService.processBulkImport(
+                file,
+                Constants.LOCATION_VALIDATION_FILE_JSON,
+                this::createLocation
+        );
     }
 
     public void createSuccessResponse(CustomResponse response) {

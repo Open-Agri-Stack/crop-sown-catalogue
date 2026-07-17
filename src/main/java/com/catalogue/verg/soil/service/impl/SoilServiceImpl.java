@@ -18,6 +18,8 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.service.ImportService;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.soil.entity.SoilEntity;
 import com.catalogue.verg.soil.repository.SoilRepository;
 import com.catalogue.verg.soil.service.SoilService;
@@ -31,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class SoilServiceImpl implements SoilService {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private SoilRepository soilRepository;
@@ -62,6 +69,9 @@ public class SoilServiceImpl implements SoilService {
     @Autowired
     private VergProperties vergProperties;
 
+    @Autowired
+    private ImportService importService;
+
     private Logger logger = LoggerFactory.getLogger(SoilServiceImpl.class);
 
     @Value("${spring.redis.cacheTtl}")
@@ -78,8 +88,7 @@ public class SoilServiceImpl implements SoilService {
             log.info("SoilServiceImpl::createSoil:creating soil");
             SoilEntity soilEntity1 = new SoilEntity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.SOIL_VALIDATION_FILE_JSON);
             soilEntity1.setSoilId(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +101,7 @@ public class SoilServiceImpl implements SoilService {
 
             log.info("SoilServiceImpl::createSoil::persisted soil in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("SoilID",
-                    soilEntity.get(Constants.SOIL_ID_RQST).asText());
+//            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) soilEntity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.SOIL_INDEX_NAME, Constants.INDEX_TYPE,
@@ -103,7 +111,7 @@ public class SoilServiceImpl implements SoilService {
             map.put(Constants.SOIL_ID_RQST, primaryID);
             response.setResult(map);
             response.setResponseCode(HttpStatus.OK);
-            log.info("SoilServiceImpl::createSoil::persisted soil in Verg");
+            log.info("SoilServiceImpl::createSoil::persisted soil in OAS");
             return response;
 
         } catch (Exception e) {
@@ -197,7 +205,70 @@ public class SoilServiceImpl implements SoilService {
 
     @Override
     public CustomResponse delete(String id) {
-        return null;
+        log.info("SoilServiceImpl::delete:inside the method with id: {}", id);
+        CustomResponse response = new CustomResponse();
+
+        // Validate that the ID is not null or empty
+        if (StringUtils.isEmpty(id)) {
+            log.warn("SoilServiceImpl::delete:id is null or empty");
+            response.setResponseCode(HttpStatus.BAD_REQUEST);
+            response.setMessage(Constants.ID_NOT_FOUND);
+            return response;
+        }
+
+        try {
+            // Check if the entity exists in the database
+            Optional<SoilEntity> entityOptional = soilRepository.findById(id);
+            if (entityOptional.isEmpty()) {
+                log.warn("SoilServiceImpl::delete:no record found for id: {}", id);
+                response.setResponseCode(HttpStatus.NOT_FOUND);
+                response.setMessage(Constants.INVALID_ID);
+                return response;
+            }
+
+            SoilEntity soilEntity = entityOptional.get();
+
+            // Check if the entity is already deleted (soft-deleted)
+            if (Constants.IN_ACTIVE.equals(soilEntity.getStatus())) {
+                log.warn("SoilServiceImpl::delete:record already deleted for id: {}", id);
+                response.setResponseCode(HttpStatus.BAD_REQUEST);
+                response.setMessage("Record is already deleted");
+                return response;
+            }
+
+            // Soft delete: update the status to INACTIVE and set updatedOn timestamp
+            soilEntity.setStatus(Constants.IN_ACTIVE);
+            soilEntity.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            soilRepository.save(soilEntity);
+            log.info("SoilServiceImpl::delete:soft deleted record in postgres for id: {}", id);
+
+            // Remove document from Elasticsearch
+            esUtilService.deleteDocument(id, Constants.SOIL_INDEX_NAME);
+            log.info("SoilServiceImpl::delete:deleted document from elasticsearch for id: {}", id);
+
+            // Remove from Redis cache
+            cacheService.deleteCache(id);
+            log.info("SoilServiceImpl::delete:evicted cache for id: {}", id);
+
+            response.setMessage(Constants.SUCCESSFULLY_DELETED);
+            response.setResponseCode(HttpStatus.OK);
+            return response;
+
+        } catch (Exception e) {
+            log.error("SoilServiceImpl::delete:error while deleting record for id: {}", id, e);
+            throw new CustomException(Constants.ERROR, "error while deleting record",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public CustomResponse importData(MultipartFile file) {
+        log.info("SoilServiceImpl::importData::started");
+        return importService.processBulkImport(
+                file,
+                Constants.SOIL_VALIDATION_FILE_JSON,
+                this::createSoil
+        );
     }
 
     public void createSuccessResponse(CustomResponse response) {

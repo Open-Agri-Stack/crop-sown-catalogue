@@ -18,6 +18,8 @@ import com.catalogue.verg.core.exception.CustomException;
 import com.catalogue.verg.core.util.Constants;
 import com.catalogue.verg.core.util.PayloadValidation;
 import com.catalogue.verg.core.util.VergProperties;
+import com.catalogue.verg.core.service.ImportService;
+import com.catalogue.verg.core.util.PrimaryKeyUtil;
 import com.catalogue.verg.{{service_name_lower}}.entity.{{service_name_pascal}}Entity;
 import com.catalogue.verg.{{service_name_lower}}.repository.{{service_name_pascal}}Repository;
 import com.catalogue.verg.{{service_name_lower}}.service.{{service_name_pascal}}Service;
@@ -31,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal}}Service {
     @Autowired
     private PayloadValidation payloadValidation;
+
+    @Autowired
+    private PrimaryKeyUtil primaryKeyUtil;
 
     @Autowired
     private {{service_name_pascal}}Repository {{service_name_camel}}Repository;
@@ -62,6 +69,9 @@ public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal
     @Autowired
     private VergProperties vergProperties;
 
+    @Autowired
+    private ImportService importService;
+
     private Logger logger = LoggerFactory.getLogger({{service_name_pascal}}ServiceImpl.class);
 
     @Value("${spring.redis.cacheTtl}")
@@ -78,8 +88,7 @@ public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal
             log.info("{{service_name_pascal}}ServiceImpl::create{{service_name_pascal}}:creating {{service_name_camel}}");
             {{service_name_pascal}}Entity {{service_name_camel}}Entity1 = new {{service_name_pascal}}Entity();
             // Generate Primary Key
-            UUID idUuid = Uuids.timeBased();
-            String primaryID = String.valueOf(idUuid);
+            String primaryID = primaryKeyUtil.generateKey(Constants.{{service_name_upper}}_VALIDATION_FILE_JSON);
             {{service_name_camel}}Entity1.set{{service_name_pascal}}Id(primaryID);
             // Create Parameters like createdDate / updateDate / Data and Status
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -92,8 +101,7 @@ public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal
 
             log.info("{{service_name_pascal}}ServiceImpl::create{{service_name_pascal}}::persisted {{service_name_camel}} in postgres");
             ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("{{service_name_pascal}}ID",
-                    {{service_name_camel}}Entity.get(Constants.{{service_name_upper}}_ID_RQST).asText());
+//            jsonNode.put("status", Constants.ACTIVE);
             jsonNode.setAll((ObjectNode) {{service_name_camel}}Entity);
             Map<String, Object> map = objectMapper.convertValue(jsonNode, Map.class);
             esUtilService.addDocument(Constants.{{service_name_upper}}_INDEX_NAME, Constants.INDEX_TYPE,
@@ -103,7 +111,7 @@ public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal
             map.put(Constants.{{service_name_upper}}_ID_RQST, primaryID);
             response.setResult(map);
             response.setResponseCode(HttpStatus.OK);
-            log.info("{{service_name_pascal}}ServiceImpl::create{{service_name_pascal}}::persisted {{service_name_camel}} in Verg");
+            log.info("{{service_name_pascal}}ServiceImpl::create{{service_name_pascal}}::persisted {{service_name_camel}} in OAS");
             return response;
 
         } catch (Exception e) {
@@ -197,7 +205,70 @@ public class {{service_name_pascal}}ServiceImpl implements {{service_name_pascal
 
     @Override
     public CustomResponse delete(String id) {
-        return null;
+        log.info("{{service_name_pascal}}ServiceImpl::delete:inside the method with id: {}", id);
+        CustomResponse response = new CustomResponse();
+
+        // Validate that the ID is not null or empty
+        if (StringUtils.isEmpty(id)) {
+            log.warn("{{service_name_pascal}}ServiceImpl::delete:id is null or empty");
+            response.setResponseCode(HttpStatus.BAD_REQUEST);
+            response.setMessage(Constants.ID_NOT_FOUND);
+            return response;
+        }
+
+        try {
+            // Check if the entity exists in the database
+            Optional<{{service_name_pascal}}Entity> entityOptional = {{service_name_camel}}Repository.findById(id);
+            if (entityOptional.isEmpty()) {
+                log.warn("{{service_name_pascal}}ServiceImpl::delete:no record found for id: {}", id);
+                response.setResponseCode(HttpStatus.NOT_FOUND);
+                response.setMessage(Constants.INVALID_ID);
+                return response;
+            }
+
+            {{service_name_pascal}}Entity {{service_name_camel}}Entity = entityOptional.get();
+
+            // Check if the entity is already deleted (soft-deleted)
+            if (Constants.IN_ACTIVE.equals({{service_name_camel}}Entity.getStatus())) {
+                log.warn("{{service_name_pascal}}ServiceImpl::delete:record already deleted for id: {}", id);
+                response.setResponseCode(HttpStatus.BAD_REQUEST);
+                response.setMessage("Record is already deleted");
+                return response;
+            }
+
+            // Soft delete: update the status to INACTIVE and set updatedOn timestamp
+            {{service_name_camel}}Entity.setStatus(Constants.IN_ACTIVE);
+            {{service_name_camel}}Entity.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            {{service_name_camel}}Repository.save({{service_name_camel}}Entity);
+            log.info("{{service_name_pascal}}ServiceImpl::delete:soft deleted record in postgres for id: {}", id);
+
+            // Remove document from Elasticsearch
+            esUtilService.deleteDocument(id, Constants.{{service_name_upper}}_INDEX_NAME);
+            log.info("{{service_name_pascal}}ServiceImpl::delete:deleted document from elasticsearch for id: {}", id);
+
+            // Remove from Redis cache
+            cacheService.deleteCache(id);
+            log.info("{{service_name_pascal}}ServiceImpl::delete:evicted cache for id: {}", id);
+
+            response.setMessage(Constants.SUCCESSFULLY_DELETED);
+            response.setResponseCode(HttpStatus.OK);
+            return response;
+
+        } catch (Exception e) {
+            log.error("{{service_name_pascal}}ServiceImpl::delete:error while deleting record for id: {}", id, e);
+            throw new CustomException(Constants.ERROR, "error while deleting record",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public CustomResponse importData(MultipartFile file) {
+        log.info("{{service_name_pascal}}ServiceImpl::importData::started");
+        return importService.processBulkImport(
+                file,
+                Constants.{{service_name_upper}}_VALIDATION_FILE_JSON,
+                this::create{{service_name_pascal}}
+        );
     }
 
     public void createSuccessResponse(CustomResponse response) {

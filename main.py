@@ -5,6 +5,53 @@ import argparse
 from pathlib import Path
 import pyfiglet
 
+class Style:
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    MAGENTA = '\033[95m'
+    BLUE = '\033[94m'
+    GRAY = '\033[90m'
+    BOLD = '\033[1m'
+    RESET = '\033[0m'
+
+def rel_path(path: str) -> str:
+    try:
+        return os.path.relpath(path)
+    except Exception:
+        return path
+
+# Statistics tracking dictionary
+stats = {
+    "created": [],
+    "updated": [],
+    "deleted": [],
+    "skipped": []
+}
+
+def log_created(file_path: str):
+    p = rel_path(file_path)
+    stats["created"].append(p)
+    print(f"{Style.GREEN}  ✨ Created  {Style.RESET} {p}")
+
+def log_updated(file_path: str):
+    p = rel_path(file_path)
+    stats["updated"].append(p)
+    print(f"{Style.CYAN}  📝 Updated  {Style.RESET} {p}")
+
+def log_deleted(file_path: str):
+    p = rel_path(file_path)
+    stats["deleted"].append(p)
+    print(f"{Style.RED}  🗑️  Deleted  {Style.RESET} {p}")
+
+def log_skipped(message: str):
+    stats["skipped"].append(message)
+    print(f"{Style.GRAY}  ➖ Skipped  {Style.RESET} {message}")
+
+def log_error(message: str):
+    print(f"{Style.RED}{Style.BOLD}  ❌ Error    {Style.RESET} {message}")
+
 def to_pascal_case(name: str) -> str:
     """vergsample -> Vergsample | my-service -> MyService"""
     return ''.join(word.capitalize() for word in re.split(r'[-_\s]', name))
@@ -22,6 +69,9 @@ def to_upper(name: str) -> str:
     """orderservice -> ORDERSERVICE | my-service -> MY_SERVICE"""
     return re.sub(r'[-\s]', '_', name).upper()
 
+def to_regular(name: str) -> str:
+    """vergsample -> Vergsample | my-service -> My Service"""
+    return ' '.join(word.capitalize() for word in re.split(r'[-_\s]', name))
 
 class CreateRegistry:
 
@@ -31,6 +81,7 @@ class CreateRegistry:
         self.pascal        = to_pascal_case(service_name)
         self.camel         = to_camel_case(service_name)
         self.upper         = to_upper(service_name)
+        self.regular       = to_regular(service_name)
 
         # Base paths
         base = os.getcwd()
@@ -57,7 +108,7 @@ class CreateRegistry:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(content)
-        print(f"Generated : {output_path}")
+        log_created(output_path)
 
     # ------------------------------------------------------------------ #
     #  Java File Generators                                                #
@@ -98,36 +149,39 @@ class CreateRegistry:
     def generate_payload_validation_json(self):
         output_path = os.path.join(self.resource_path, "payloadValidation", f"{self.camel}PayloadValidation.json")
         if Path(output_path).is_file():
-            print(f"Skipping : {output_path} already exists.")
+            log_skipped(f"{rel_path(output_path)} already exists.")
             return
         payload_schema = {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                f"{self.camel}Id": {
+                f"{self.regular} Id": {
                     "type": "string",
+                    "prefix": f"{self.lower}-",
+                    "key": "Primary",
+                    "keyLength": 12,
                     "description": f"description about {self.camel}Id"
                 }
             },
-            "required": [f"{self.camel}Id"]
+            "required": [f"{self.regular} Id"]
         }
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "w") as f:
             json.dump(payload_schema, f, indent=4)
-        print(f"Generated : {output_path}")
+        log_created(output_path)
 
     def generate_es_mapping_json(self):
         output_path = os.path.join(self.resource_path, "EsFieldsmapping", f"es{self.pascal}RequiredFields.json")
         if Path(output_path).is_file():
-            print(f"Skipping : {output_path} already exists.")
+            log_skipped(f"{rel_path(output_path)} already exists.")
             return
         es_required_fields = {
-            f"{self.camel}Id": {"type": "keyword"}
+            f"{self.regular} Id": {"type": "keyword"}
         }
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "w") as f:
             json.dump(es_required_fields, f, indent=4)
-        print(f"Generated : {output_path}")
+        log_created(output_path)
 
     # ------------------------------------------------------------------ #
     #  File Editors                                                        #
@@ -137,11 +191,11 @@ class CreateRegistry:
         with open(constants_path, "r") as f:
             content = f.read()
         if f"{self.upper}_VALIDATION_FILE_JSON" in content:
-            print(f"Skipping : Constants for '{self.camel}' already exist.")
+            log_skipped(f"Constants for '{self.camel}' already exist.")
             return
         insertion_point = "    private Constants() {"
         if insertion_point not in content:
-            print("Could not find insertion point in Constants.java")
+            log_error("Could not find insertion point in Constants.java")
             return
         new_constants = f"""
     // {self.pascal} Specific Constants
@@ -153,7 +207,7 @@ class CreateRegistry:
         updated_content = content.replace(insertion_point, new_constants + insertion_point)
         with open(constants_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated   : {constants_path}")
+        log_updated(constants_path)
 
     def append_application_properties(self):
         properties_path = os.path.join(self.resource_path, "application.properties")
@@ -161,19 +215,19 @@ class CreateRegistry:
             content = f.read()
         property_key = f"elastic.required.field.{self.camel}.json.path"
         if property_key in content:
-            print(f"Skipping : '{property_key}' already exists.")
+            log_skipped(f"'{property_key}' already exists in application.properties.")
             return
         updated_content = content.rstrip("\n") + f"\n{property_key}=/EsFieldsmapping/es{self.pascal}RequiredFields.json\n"
         with open(properties_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated   : {properties_path}")
+        log_updated(properties_path)
 
     def append_verg_properties(self):
         verg_path = os.path.join(self.util_path, "VergProperties.java")
         with open(verg_path, "r") as f:
             content = f.read()
         if f"elastic{self.pascal}JsonPath" in content:
-            print(f"Skipping : 'elastic{self.pascal}JsonPath' already exists.")
+            log_skipped(f"'elastic{self.pascal}JsonPath' already exists in VergProperties.java.")
             return
         new_field = f"""
         @Value("${{elastic.required.field.{self.lower}.json.path}}")
@@ -183,7 +237,7 @@ class CreateRegistry:
         updated_content  = content[:last_brace_index] + new_field + content[last_brace_index:]
         with open(verg_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated   : {verg_path}")
+        log_updated(verg_path)
 
     # ------------------------------------------------------------------ #
     #  Master Runner                                                       #
@@ -197,7 +251,7 @@ class CreateRegistry:
             self.generate_service()
             self.generate_service_impl()
         else:
-            print(f"Skipping Java files: '{self.lower}' directory already exists.")
+            log_skipped(f"Java files directory '{rel_path(service_dir)}' already exists.")
 
         self.generate_payload_validation_json()
         self.generate_es_mapping_json()
@@ -214,6 +268,7 @@ class DeleteRegistry:
         self.pascal       = to_pascal_case(service_name)
         self.camel        = to_camel_case(service_name)
         self.upper        = to_upper(service_name)
+        self.regular       = to_regular(service_name)
 
         # Base paths (same as CreateRegistry)
         base = os.getcwd()
@@ -227,17 +282,17 @@ class DeleteRegistry:
     def _delete_file(self, file_path: str):
         if Path(file_path).is_file():
             os.remove(file_path)
-            print(f"Deleted  : {file_path}")
+            log_deleted(file_path)
         else:
-            print(f"Skipping : {file_path} does not exist.")
+            log_skipped(f"{rel_path(file_path)} does not exist.")
 
     def _delete_dir(self, dir_path: str):
         if Path(dir_path).is_dir():
             import shutil
             shutil.rmtree(dir_path)
-            print(f"Deleted  : {dir_path}")
+            log_deleted(dir_path)
         else:
-            print(f"Skipping : {dir_path} does not exist.")
+            log_skipped(f"{rel_path(dir_path)} does not exist.")
 
     # ------------------------------------------------------------------ #
     #  Java File Deletors                                                  #
@@ -295,7 +350,7 @@ class DeleteRegistry:
             content = f.read()
 
         if f"{self.upper}_VALIDATION_FILE_JSON" not in content:
-            print(f"Skipping : Constants for '{self.camel}' do not exist.")
+            log_skipped(f"Constants for '{self.camel}' do not exist.")
             return
 
         # Remove the 3 constant lines + the comment line
@@ -304,7 +359,7 @@ class DeleteRegistry:
 
         with open(constants_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated  : {constants_path}")
+        log_updated(constants_path)
 
     def remove_application_properties(self):
         properties_path = os.path.join(self.resource_path, "application.properties")
@@ -313,7 +368,7 @@ class DeleteRegistry:
 
         property_key = f"elastic.required.field.{self.camel}.json.path"
         if property_key not in content:
-            print(f"Skipping : '{property_key}' does not exist.")
+            log_skipped(f"Property '{property_key}' does not exist in application.properties.")
             return
 
         # Remove the line that contains the property key
@@ -322,7 +377,7 @@ class DeleteRegistry:
 
         with open(properties_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated  : {properties_path}")
+        log_updated(properties_path)
 
     def remove_verg_properties(self):
         verg_path = os.path.join(self.util_path, "VergProperties.java")
@@ -330,7 +385,7 @@ class DeleteRegistry:
             content = f.read()
 
         if f"elastic{self.pascal}JsonPath" not in content:
-            print(f"Skipping : 'elastic{self.pascal}JsonPath' does not exist.")
+            log_skipped(f"Field 'elastic{self.pascal}JsonPath' does not exist in VergProperties.java.")
             return
 
         # Remove the @Value annotation line + private field line
@@ -339,7 +394,7 @@ class DeleteRegistry:
 
         with open(verg_path, "w") as f:
             f.write(updated_content)
-        print(f"Updated  : {verg_path}")
+        log_updated(verg_path)
 
     # ------------------------------------------------------------------ #
     #  Master Runner                                                       #
@@ -366,14 +421,49 @@ class DeleteRegistry:
 # ------------------------------------------------------------------ #
 #  Entry Point                                                         #
 # ------------------------------------------------------------------ #
+def print_summary(action, names):
+    def print_field(label, value, value_color=""):
+        # Total internal width of the box is 70 characters.
+        # Margin is 2 spaces on left, 1 space on right.
+        # So visible content + padding must equal 67.
+        visible_len = len(label) + len(value)
+        padding = max(0, 67 - visible_len)
+        styled_value = f"{value_color}{value}{Style.RESET}" if value_color else value
+        print(f"│  {Style.BOLD}{label}{Style.RESET}{styled_value}{' ' * padding}│")
+
+    print(f"\n{Style.BOLD}┌{'─' * 70}┐{Style.RESET}")
+    print(f"{Style.BOLD}│  🚀 Open Agri Stack Execution Report                                 │{Style.RESET}")
+    print(f"{Style.BOLD}├{'─' * 70}┤{Style.RESET}")
+    print_field("Status:     ", "SUCCESS", Style.GREEN)
+    print_field("Action:     ", action.upper())
+    print_field("Targets:    ", ", ".join(names))
+    print(f"{Style.BOLD}├{'─' * 70}┤{Style.RESET}")
+    print(f"│  {Style.GREEN}✨ Created:{Style.RESET} {len(stats['created']):<10} {Style.CYAN}📝 Updated:{Style.RESET} {len(stats['updated']):<10} {Style.RED}🗑️  Deleted:{Style.RESET} {len(stats['deleted']):<10} │")
+    print(f"│  {Style.GRAY}➖ Skipped:{Style.RESET} {len(stats['skipped']):<54} │")
+    print(f"{Style.BOLD}└{'─' * 70}┘{Style.RESET}\n")
+
 if __name__ == "__main__":
-    text = pyfiglet.print_figlet(text="VERG",font="slant", colors="green")
+    text = pyfiglet.print_figlet(text="Open Agri Stack", font="slant", colors="green")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name",   required=True)
+    parser.add_argument("--name",   required=True, nargs="+",
+                        help="Comma-separated catalogue names (e.g. --name crop,pesticide,fertilizer)")
     parser.add_argument("--action", required=True, choices=["create", "delete"])
     args = parser.parse_args()
 
-    if args.action == "create":
-        CreateRegistry(args.name).generate_all()
-    elif args.action == "delete":
-        DeleteRegistry(args.name).delete_all()
+    names = [n.strip().replace(" ", "-") for n in " ".join(args.name).split(",") if n.strip()]
+    total = len(names)
+
+    for idx, name in enumerate(names, start=1):
+        # Premium Box Drawing Header
+        header_text = f"[{idx}/{total}] {args.action.upper()} ➔ {name}"
+        border_len = len(header_text) + 4
+        print(f"\n{Style.BOLD}┌{'─' * border_len}┐{Style.RESET}")
+        print(f"{Style.BOLD}│  {header_text}  │{Style.RESET}")
+        print(f"{Style.BOLD}└{'─' * border_len}┘\n")
+
+        if args.action == "create":
+            CreateRegistry(name).generate_all()
+        elif args.action == "delete":
+            DeleteRegistry(name).delete_all()
+
+    print_summary(args.action, names)

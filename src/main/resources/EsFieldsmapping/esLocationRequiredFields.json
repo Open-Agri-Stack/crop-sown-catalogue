@@ -1,5 +1,11 @@
 {
-    "locationId": {
+    "Location Id": {
+        "type": "keyword"
+    },
+    "Region": {
+        "type": "keyword"
+    },
+    "Market Place": {
         "type": "keyword"
     }
 }
