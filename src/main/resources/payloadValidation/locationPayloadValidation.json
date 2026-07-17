@@ -4,41 +4,22 @@
     "properties": {
         "Location Id": {
             "type": "string",
-            "prefix": "loction-",
+            "prefix": "location-",
             "key": "Primary",
-            "description": "land information prefix"
+            "keyLength": 12,
+            "description": "location prefix"
         },
-        "Farmer ID": {
+        "Region": {
             "type": "string",
-            "description": "reference to the Farmer record this land information belongs to"
+            "description": "region the market place belongs to"
         },
-        "Farmer": {
-            "type": "string"
-        },
-        "Land ID": {
-            "type": "string"
-        },
-        "Area In Hectare": {
-            "type": "number"
-        },
-        "Ownership Type": {
-            "type": "string"
-        },
-        "Land Kebele is in": {
-            "type": "string"
-        },
-        "Land Certificate": {
+        "Market Place": {
             "type": "string",
-            "description": "filename of uploaded land certificate image/document"
-        },
-        "Remark": {
-            "type": "string"
+            "description": "name of the market place"
         }
     },
     "required": [
-        "Farmer",
-        "Land ID",
-        "Area In Hectare",
-        "Ownership Type"
+        "Region",
+        "Market Place"
     ]
 }

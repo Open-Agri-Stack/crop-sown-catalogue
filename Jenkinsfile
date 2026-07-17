@@ -4,7 +4,7 @@ pipeline {
     environment {
         ECR_REGISTRY   = '379220350808.dkr.ecr.us-west-2.amazonaws.com'
         ECR_REPOSITORY = 'service-catalogue'
-        AWS_REGION     = 'us-west-2'
+        AWS_REGION     = 'ap-northeast-1'
         IMAGE_TAG      = "${env.GIT_COMMIT?.take(7) ?: 'latest'}"
     }
 

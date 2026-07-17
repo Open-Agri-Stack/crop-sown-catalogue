@@ -6,36 +6,32 @@
             "type": "string",
             "prefix": "season-",
             "key": "Primary",
+            "keyLength": 5,
             "description": "season prefix"
         },
-        "Name": {
-            "type": "string"
-        },
-        "Start GC": {
+        "Season": {
             "type": "string",
-            "format": "date"
-        },
-        "End GC": {
-            "type": "string",
-            "format": "date"
+            "description": "name of the season (Kiremt, Tseday, Bega, Belg)"
         },
         "Start Month": {
-            "type": "integer"
+            "type": "string",
+            "description": "gregorian month the season starts in"
         },
         "Start Day": {
-            "type": "integer"
+            "type": "integer",
+            "description": "day of the start month the season begins on"
         },
         "End Month": {
-            "type": "integer"
+            "type": "string",
+            "description": "gregorian month the season ends in"
         },
         "End Day": {
-            "type": "integer"
+            "type": "integer",
+            "description": "day of the end month the season ends on"
         }
     },
     "required": [
-        "Name",
-        "Start GC",
-        "End GC",
+        "Season",
         "Start Month",
         "Start Day",
         "End Month",

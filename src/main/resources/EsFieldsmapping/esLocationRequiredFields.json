@@ -2,28 +2,10 @@
     "Location Id": {
         "type": "keyword"
     },
-    "Farmer ID": {
+    "Region": {
         "type": "keyword"
     },
-    "Farmer": {
-        "type": "keyword"
-    },
-    "Land ID": {
-        "type": "keyword"
-    },
-    "Area In Hectare": {
-        "type": "float"
-    },
-    "Ownership Type": {
-        "type": "keyword"
-    },
-    "Land Kebele is in": {
-        "type": "keyword"
-    },
-    "Land Certificate": {
-        "type": "keyword"
-    },
-    "Remark": {
+    "Market Place": {
         "type": "keyword"
     }
 }

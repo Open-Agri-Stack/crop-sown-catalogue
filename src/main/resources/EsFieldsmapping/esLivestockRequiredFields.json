@@ -2,16 +2,22 @@
     "Livestock Id": {
         "type": "keyword"
     },
-    "Farmer ID": {
+    "Livestock": {
         "type": "keyword"
     },
-    "Farmer": {
+    "Location type": {
         "type": "keyword"
     },
-    "Livestock Type": {
+    "Breed": {
         "type": "keyword"
     },
-    "Number": {
-        "type": "integer"
+    "Gender": {
+        "type": "keyword"
+    },
+    "Production type": {
+        "type": "keyword"
+    },
+    "Body condition": {
+        "type": "keyword"
     }
 }

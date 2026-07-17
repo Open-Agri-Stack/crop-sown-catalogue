@@ -6,25 +6,36 @@
             "type": "string",
             "prefix": "livestock-",
             "key": "Primary",
-            "description": "livestock information prefix"
+            "keyLength": 12,
+            "description": "livestock prefix"
         },
-        "Farmer ID": {
+        "Livestock": {
             "type": "string",
-            "description": "reference to the Farmer record this livestock information belongs to"
+            "description": "type of the livestock"
         },
-        "Farmer": {
-            "type": "string"
+        "Location type": {
+            "type": "string",
+            "description": "location type of the livestock (e.g. High Land, Low Land); absent when not applicable"
         },
-        "Livestock Type": {
-            "type": "string"
+        "Breed": {
+            "type": "string",
+            "description": "breed of the livestock"
         },
-        "Number": {
-            "type": "integer"
+        "Gender": {
+            "type": "string",
+            "description": "gender of the livestock"
+        },
+        "Production type": {
+            "type": "string",
+            "description": "production type of the livestock (e.g. Castrated, Meat, Milk); absent when not applicable"
+        },
+        "Body condition": {
+            "type": "string",
+            "description": "body condition of the livestock (e.g. Thin, Moderate Weight, Very Fat)"
         }
     },
     "required": [
-        "Farmer",
-        "Livestock Type",
-        "Number"
+        "Livestock",
+        "Breed"
     ]
 }
