@@ -1,0 +1,94 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Harvesting Details Id": {
+            "type": "string",
+            "prefix": "harvestingdetails-",
+            "key": "Primary",
+            "keyLength": 12,
+            "description": "harvesting details prefix"
+        },
+        "Land ID": {
+            "type": "string",
+            "description": "unique id of the land / plot (e.g. RU/12/12/123/12345)"
+        },
+        "Cluster Status": {
+            "type": "string",
+            "description": "cluster status of the harvest activity (e.g. Independent); drives which harvest section applies"
+        },
+        "Crop Maturity Status": {
+            "type": "string",
+            "description": "maturity status of the crop (e.g. Ready for Harvest)"
+        },
+        "Harvest Date": {
+            "type": "string",
+            "description": "date of the harvest in gregorian calendar (MM/DD/YYYY)"
+        },
+        "Area Harvested (ha)": {
+            "type": "number",
+            "description": "area harvested in hectares"
+        },
+        "Quantity Harvested (quintal)": {
+            "type": "number",
+            "description": "quantity harvested in quintals"
+        },
+        "Post-harvest Loss (%)": {
+            "type": "number",
+            "description": "post-harvest loss in percentage"
+        },
+        "Quantity Stored": {
+            "type": "number",
+            "description": "quantity of the harvest stored"
+        },
+        "Quantity Sold": {
+            "type": "number",
+            "description": "quantity of the harvest sold"
+        },
+        "Yield (kg/ha)": {
+            "type": "number",
+            "description": "computed yield in kilograms per hectare"
+        },
+        "Yield Performance (%)": {
+            "type": "number",
+            "description": "computed yield performance against expected yield in percentage"
+        },
+        "Fertilizer Efficiency": {
+            "type": "number",
+            "description": "computed fertilizer efficiency of the harvest"
+        },
+        "Land Utilization Rate": {
+            "type": "number",
+            "description": "computed land utilization rate of the harvest"
+        },
+        "Seed Productivity": {
+            "type": "number",
+            "description": "computed seed productivity of the harvest"
+        },
+        "Surveyor Name": {
+            "type": "string",
+            "description": "name of the surveyor"
+        },
+        "Surveyor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the surveyor"
+        },
+        "Supervisor Name": {
+            "type": "string",
+            "description": "name of the supervisor"
+        },
+        "Supervisor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the supervisor"
+        },
+        "First approvel status": {
+            "type": "string",
+            "description": "first approval status of the harvesting details record (label kept as in source form)"
+        }
+    },
+    "required": [
+        "Land ID",
+        "Cluster Status",
+        "Crop Maturity Status"
+    ]
+}

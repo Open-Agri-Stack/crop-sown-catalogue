@@ -1,0 +1,86 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Sowing Details Id": {
+            "type": "string",
+            "prefix": "sowingdetails-",
+            "key": "Primary",
+            "keyLength": 12,
+            "description": "sowing details prefix"
+        },
+        "Land ID": {
+            "type": "string",
+            "description": "unique id of the land / plot (e.g. RU/12/12/123/12345)"
+        },
+        "Cluster Status": {
+            "type": "string",
+            "description": "cluster status of the sowing activity (e.g. Independent or cluster); drives which detail section applies"
+        },
+        "Sowing Status": {
+            "type": "string",
+            "description": "status of the sowing activity (e.g. Sown)"
+        },
+        "Area Sown (ha)": {
+            "type": "number",
+            "description": "area sown in hectares"
+        },
+        "Pest / Disease Occurrence": {
+            "type": "boolean",
+            "description": "whether any pest / disease occurred after sowing"
+        },
+        "Pest / Disease Details": {
+            "type": "array",
+            "description": "pest / disease incidents recorded after sowing",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Incident Record ID": {
+                        "type": "string",
+                        "description": "id of the pest / disease incident record (e.g. PI/2026/00002)"
+                    },
+                    "Growth Stage": {
+                        "type": "string",
+                        "description": "growth stage of the crop when the incident occurred; bilingual label in source form (e.g. Emergence / Seedling)"
+                    },
+                    "Type of Infestation": {
+                        "type": "string",
+                        "description": "type of the infestation (e.g. Disease)"
+                    },
+                    "Severity Level": {
+                        "type": "string",
+                        "description": "severity level of the infestation (e.g. Low, Medium, High)"
+                    }
+                },
+                "required": [
+                    "Incident Record ID"
+                ]
+            }
+        },
+        "Surveyor Name": {
+            "type": "string",
+            "description": "name of the surveyor"
+        },
+        "Surveyor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the surveyor"
+        },
+        "Supervisor Name": {
+            "type": "string",
+            "description": "name of the supervisor"
+        },
+        "Supervisor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the supervisor"
+        },
+        "First approvel status": {
+            "type": "string",
+            "description": "first approval status of the sowing details record (label kept as in source form)"
+        }
+    },
+    "required": [
+        "Land ID",
+        "Cluster Status",
+        "Sowing Status"
+    ]
+}

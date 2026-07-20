@@ -1,0 +1,52 @@
+{
+    "Sowing Details Id": {
+        "type": "keyword"
+    },
+    "Land ID": {
+        "type": "keyword"
+    },
+    "Cluster Status": {
+        "type": "keyword"
+    },
+    "Sowing Status": {
+        "type": "keyword"
+    },
+    "Area Sown (ha)": {
+        "type": "float"
+    },
+    "Pest / Disease Occurrence": {
+        "type": "boolean"
+    },
+    "Pest / Disease Details": {
+        "type": "nested",
+        "properties": {
+            "Incident Record ID": {
+                "type": "keyword"
+            },
+            "Growth Stage": {
+                "type": "keyword"
+            },
+            "Type of Infestation": {
+                "type": "keyword"
+            },
+            "Severity Level": {
+                "type": "keyword"
+            }
+        }
+    },
+    "Surveyor Name": {
+        "type": "keyword"
+    },
+    "Surveyor Mobile Number": {
+        "type": "keyword"
+    },
+    "Supervisor Name": {
+        "type": "keyword"
+    },
+    "Supervisor Mobile Number": {
+        "type": "keyword"
+    },
+    "First approvel status": {
+        "type": "keyword"
+    }
+}

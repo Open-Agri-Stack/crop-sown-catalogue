@@ -1,0 +1,141 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Planned Input Id": {
+            "type": "string",
+            "prefix": "plannedinput-",
+            "key": "Primary",
+            "keyLength": 12,
+            "description": "planned input prefix"
+        },
+        "Land ID": {
+            "type": "string",
+            "description": "unique id of the land / plot (e.g. RU/12/12/123/12345)"
+        },
+        "Plot Category": {
+            "type": "string",
+            "description": "category of the plot; drives the popup heading (e.g. Annual Crop)"
+        },
+        "Season": {
+            "type": "string",
+            "description": "season planned for the crop (Kiremt, Tseday, Bega, Belg)"
+        },
+        "Crop": {
+            "type": "string",
+            "description": "crop planned on the plot (e.g. Maize (Corn))"
+        },
+        "Crop Category": {
+            "type": "string",
+            "description": "category of the planned crop (e.g. Cereals)"
+        },
+        "Crop Variety": {
+            "type": "string",
+            "description": "variety of the planned crop"
+        },
+        "Cropping System": {
+            "type": "string",
+            "description": "cropping system planned (e.g. Mono-cropping)"
+        },
+        "Planned Date (GC)": {
+            "type": "string",
+            "description": "planned planting date in gregorian calendar (MM/DD/YYYY)"
+        },
+        "Planned Date (EC)": {
+            "type": "string",
+            "description": "planned planting date in ethiopian calendar"
+        },
+        "Average Growth Duration (days)": {
+            "type": "number",
+            "description": "average growth duration of the crop in days"
+        },
+        "Planned Crop Area (ha)": {
+            "type": "number",
+            "description": "area planned for the crop in hectares"
+        },
+        "Expected Yield (quintals)": {
+            "type": "number",
+            "description": "expected yield of the crop in quintals"
+        },
+        "Seed Type": {
+            "type": "string",
+            "description": "type of the seed planned (e.g. Local)"
+        },
+        "Seed Source": {
+            "type": "string",
+            "description": "source of the seed (e.g. Government / Woreda Agriculture Office)"
+        },
+        "Planned Seed Quantity (kg)": {
+            "type": "number",
+            "description": "seed quantity planned in kilograms"
+        },
+        "Planned Fertilizer Type": {
+            "type": "string",
+            "description": "type of the fertilizer planned (e.g. Organic)"
+        },
+        "Planned Fertilizer Quantity (kg)": {
+            "type": "number",
+            "description": "fertilizer quantity planned in kilograms"
+        },
+        "Planned Labor": {
+            "type": "integer",
+            "description": "number of labourers planned"
+        },
+        "Water Resources": {
+            "type": "array",
+            "description": "planned water resources for the crop",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Water Resource": {
+                        "type": "string",
+                        "description": "water resource planned (e.g. Irrigation - Ground Water)"
+                    },
+                    "Method": {
+                        "type": "string",
+                        "description": "method of watering (e.g. Sprinker)"
+                    },
+                    "Frequency": {
+                        "type": "string",
+                        "description": "frequency of watering (e.g. Weekly)"
+                    }
+                },
+                "required": [
+                    "Water Resource"
+                ]
+            }
+        },
+        "Cluster Farming Done Earlier": {
+            "type": "string",
+            "description": "answer to 'Have you done any cluster farming or related activities earlier?' (Yes/No)"
+        },
+        "Surveyor Name": {
+            "type": "string",
+            "description": "name of the surveyor"
+        },
+        "Surveyor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the surveyor"
+        },
+        "Supervisor Name": {
+            "type": "string",
+            "description": "name of the supervisor"
+        },
+        "Supervisor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the supervisor"
+        },
+        "First approvel status": {
+            "type": "string",
+            "description": "first approval status of the planned input record (label kept as in source form)"
+        }
+    },
+    "required": [
+        "Land ID",
+        "Plot Category",
+        "Season",
+        "Crop",
+        "Crop Category",
+        "Crop Variety"
+    ]
+}
