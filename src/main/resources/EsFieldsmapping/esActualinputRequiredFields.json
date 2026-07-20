@@ -1,0 +1,117 @@
+{
+    "Actual Input Id": {
+        "type": "keyword"
+    },
+    "Land ID": {
+        "type": "keyword"
+    },
+    "Season": {
+        "type": "keyword"
+    },
+    "Crop": {
+        "type": "keyword"
+    },
+    "Crop Category": {
+        "type": "keyword"
+    },
+    "Crop Variety": {
+        "type": "keyword"
+    },
+    "Cropping System": {
+        "type": "keyword"
+    },
+    "Actual Planted Date (GC)": {
+        "type": "keyword"
+    },
+    "Actual Planted Date (EC)": {
+        "type": "keyword"
+    },
+    "Actual Growth Duration (days)": {
+        "type": "float"
+    },
+    "Actual Crop Area (ha)": {
+        "type": "float"
+    },
+    "Actual Yield (quintal)": {
+        "type": "float"
+    },
+    "Cultivation Type": {
+        "type": "keyword"
+    },
+    "Land Preparation": {
+        "type": "keyword"
+    },
+    "Seed Type": {
+        "type": "keyword"
+    },
+    "Seed Source": {
+        "type": "keyword"
+    },
+    "Actual Seed Quantity (kg)": {
+        "type": "float"
+    },
+    "Actual Fertilizer Type": {
+        "type": "keyword"
+    },
+    "Actual Fertilizer Quantity (kg)": {
+        "type": "float"
+    },
+    "Pest Occurrence": {
+        "type": "keyword"
+    },
+    "Weed Occurrence": {
+        "type": "keyword"
+    },
+    "Pest Details": {
+        "type": "nested",
+        "properties": {
+            "Pest Type": {
+                "type": "keyword"
+            },
+            "Pest Name": {
+                "type": "keyword"
+            },
+            "Method of Control": {
+                "type": "keyword"
+            },
+            "Pesticide Type": {
+                "type": "keyword"
+            },
+            "Pesticide Name": {
+                "type": "keyword"
+            },
+            "Frequency of Application": {
+                "type": "keyword"
+            }
+        }
+    },
+    "Water Resources": {
+        "type": "nested",
+        "properties": {
+            "Water Resource": {
+                "type": "keyword"
+            },
+            "Method": {
+                "type": "keyword"
+            },
+            "Frequency": {
+                "type": "keyword"
+            }
+        }
+    },
+    "Surveyor Name": {
+        "type": "keyword"
+    },
+    "Surveyor Mobile Number": {
+        "type": "keyword"
+    },
+    "Supervisor Name": {
+        "type": "keyword"
+    },
+    "Supervisor Mobile Number": {
+        "type": "keyword"
+    },
+    "First approvel status": {
+        "type": "keyword"
+    }
+}

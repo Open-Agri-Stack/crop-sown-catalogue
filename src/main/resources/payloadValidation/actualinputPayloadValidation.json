@@ -1,0 +1,183 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Actual Input Id": {
+            "type": "string",
+            "prefix": "actualinput-",
+            "key": "Primary",
+            "keyLength": 12,
+            "description": "actual input prefix"
+        },
+        "Land ID": {
+            "type": "string",
+            "description": "unique id of the land / plot (e.g. RU/12/12/123/12345)"
+        },
+        "Season": {
+            "type": "string",
+            "description": "season of the actual cultivation (Kiremt, Tseday, Bega, Belg)"
+        },
+        "Crop": {
+            "type": "string",
+            "description": "crop actually cultivated on the plot (e.g. Maize (Corn))"
+        },
+        "Crop Category": {
+            "type": "string",
+            "description": "category of the cultivated crop (e.g. Cereals)"
+        },
+        "Crop Variety": {
+            "type": "string",
+            "description": "variety of the cultivated crop"
+        },
+        "Cropping System": {
+            "type": "string",
+            "description": "cropping system followed (e.g. Mono-cropping)"
+        },
+        "Actual Planted Date (GC)": {
+            "type": "string",
+            "description": "actual planting date in gregorian calendar (MM/DD/YYYY)"
+        },
+        "Actual Planted Date (EC)": {
+            "type": "string",
+            "description": "actual planting date in ethiopian calendar"
+        },
+        "Actual Growth Duration (days)": {
+            "type": "number",
+            "description": "actual growth duration of the crop in days"
+        },
+        "Actual Crop Area (ha)": {
+            "type": "number",
+            "description": "actual area cultivated in hectares"
+        },
+        "Actual Yield (quintal)": {
+            "type": "number",
+            "description": "actual yield of the crop in quintals"
+        },
+        "Cultivation Type": {
+            "type": "string",
+            "description": "type of cultivation used (e.g. Combine Harvester)"
+        },
+        "Land Preparation": {
+            "type": "array",
+            "description": "land preparation methods used (e.g. Tractor Disc/Moldboard Plough)",
+            "items": {
+                "type": "string"
+            }
+        },
+        "Seed Type": {
+            "type": "string",
+            "description": "type of the seed used (e.g. Local)"
+        },
+        "Seed Source": {
+            "type": "string",
+            "description": "source of the seed (e.g. Government / Woreda Agriculture Office)"
+        },
+        "Actual Seed Quantity (kg)": {
+            "type": "number",
+            "description": "actual seed quantity used in kilograms"
+        },
+        "Actual Fertilizer Type": {
+            "type": "string",
+            "description": "type of the fertilizer actually used (e.g. Organic)"
+        },
+        "Actual Fertilizer Quantity (kg)": {
+            "type": "number",
+            "description": "actual fertilizer quantity used in kilograms"
+        },
+        "Pest Occurrence": {
+            "type": "string",
+            "description": "whether pest occurred during cultivation (Yes/No)"
+        },
+        "Weed Occurrence": {
+            "type": "string",
+            "description": "whether weed occurred during cultivation (Yes/No)"
+        },
+        "Pest Details": {
+            "type": "array",
+            "description": "details of pests occurred and control measures applied",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Pest Type": {
+                        "type": "string",
+                        "description": "type of the pest (e.g. Insect Pests)"
+                    },
+                    "Pest Name": {
+                        "type": "string",
+                        "description": "name of the pest (e.g. Aphids)"
+                    },
+                    "Method of Control": {
+                        "type": "string",
+                        "description": "method used to control the pest (e.g. Sprayer)"
+                    },
+                    "Pesticide Type": {
+                        "type": "string",
+                        "description": "type of the pesticide applied (e.g. Avicide)"
+                    },
+                    "Pesticide Name": {
+                        "type": "string",
+                        "description": "name of the pesticide applied (e.g. Avitrol)"
+                    },
+                    "Frequency of Application": {
+                        "type": "string",
+                        "description": "frequency of pesticide application (e.g. Bi-Weekly)"
+                    }
+                },
+                "required": [
+                    "Pest Type"
+                ]
+            }
+        },
+        "Water Resources": {
+            "type": "array",
+            "description": "water resources actually used for the crop",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Water Resource": {
+                        "type": "string",
+                        "description": "water resource used (e.g. Irrigation - Ground Water)"
+                    },
+                    "Method": {
+                        "type": "string",
+                        "description": "method of watering (e.g. Sprinker)"
+                    },
+                    "Frequency": {
+                        "type": "string",
+                        "description": "frequency of watering (e.g. Weekly)"
+                    }
+                },
+                "required": [
+                    "Water Resource"
+                ]
+            }
+        },
+        "Surveyor Name": {
+            "type": "string",
+            "description": "name of the surveyor"
+        },
+        "Surveyor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the surveyor"
+        },
+        "Supervisor Name": {
+            "type": "string",
+            "description": "name of the supervisor"
+        },
+        "Supervisor Mobile Number": {
+            "type": "string",
+            "description": "mobile number of the supervisor"
+        },
+        "First approvel status": {
+            "type": "string",
+            "description": "first approval status of the actual input record (label kept as in source form)"
+        }
+    },
+    "required": [
+        "Land ID",
+        "Season",
+        "Crop",
+        "Crop Category",
+        "Crop Variety"
+    ]
+}

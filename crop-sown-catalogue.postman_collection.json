@@ -1,0 +1,580 @@
+{
+ "info": {
+  "name": "Crop Sown Catalogue Service",
+  "description": "CRUD, search and import endpoints for the four crop-sown-registry catalogues (Planned Input, Actual Input, Sowing Details, Harvesting Details), one per tab of the Crop Sown Registry form.",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:8080",
+   "type": "string"
+  }
+ ],
+ "item": [
+  {
+   "name": "plannedinput",
+   "description": "Planned Input (Planning tab)",
+   "item": [
+    {
+     "name": "create",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"Land ID\": \"RU/12/12/123/12345\",\n  \"Plot Category\": \"Annual Crop\",\n  \"Season\": \"Kiremt\",\n  \"Crop\": \"Maize (Corn)\",\n  \"Crop Category\": \"Cereals\",\n  \"Crop Variety\": \"BH-660\",\n  \"Cropping System\": \"Mono-cropping\",\n  \"Planned Date (GC)\": \"07/17/2026\",\n  \"Planned Date (EC)\": \"10/11/2018\",\n  \"Average Growth Duration (days)\": 45.0,\n  \"Planned Crop Area (ha)\": 6.0,\n  \"Expected Yield (quintals)\": 5.0,\n  \"Seed Type\": \"Local\",\n  \"Seed Source\": \"Government / Woreda Agriculture Office\",\n  \"Planned Seed Quantity (kg)\": 80.0,\n  \"Planned Fertilizer Type\": \"Organic\",\n  \"Planned Fertilizer Quantity (kg)\": 50.0,\n  \"Planned Labor\": 5,\n  \"Water Resources\": [\n    {\n      \"Water Resource\": \"Irrigation - Ground Water\",\n      \"Method\": \"Sprinker\",\n      \"Frequency\": \"Weekly\"\n    }\n  ],\n  \"Cluster Farming Done Earlier\": \"No\",\n  \"Surveyor Name\": \"Abebe Kebede\",\n  \"Surveyor Mobile Number\": \"+251911000000\",\n  \"Supervisor Name\": \"Sara Alemu\",\n  \"Supervisor Mobile Number\": \"+251911000001\",\n  \"First approvel status\": \"Pending\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/plannedinput/v1/create",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "plannedinput",
+        "v1",
+        "create"
+       ]
+      }
+     }
+    },
+    {
+     "name": "search",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"pageNumber\": 0,\n  \"pageSize\": 10\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/plannedinput/v1/search",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "plannedinput",
+        "v1",
+        "search"
+       ]
+      }
+     }
+    },
+    {
+     "name": "read",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/plannedinput/v1/read/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "plannedinput",
+        "v1",
+        "read",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "plannedinput-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete",
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/plannedinput/v1/delete/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "plannedinput",
+        "v1",
+        "delete",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "plannedinput-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "import",
+     "request": {
+      "method": "POST",
+      "header": [],
+      "body": {
+       "mode": "formdata",
+       "formdata": [
+        {
+         "key": "file",
+         "type": "file",
+         "src": "",
+         "description": "CSV or XLSX file to import (max 5MB). Column headers must match schema property names exactly."
+        }
+       ]
+      },
+      "url": {
+       "raw": "{{baseUrl}}/plannedinput/v1/import",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "plannedinput",
+        "v1",
+        "import"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "actualinput",
+   "description": "Actual Input (Cultivation / Land Preparation tab)",
+   "item": [
+    {
+     "name": "create",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"Land ID\": \"RU/12/12/123/12345\",\n  \"Season\": \"Kiremt\",\n  \"Crop\": \"Maize (Corn)\",\n  \"Crop Category\": \"Cereals\",\n  \"Crop Variety\": \"BH-660\",\n  \"Cropping System\": \"Mono-cropping\",\n  \"Actual Planted Date (GC)\": \"07/17/2026\",\n  \"Actual Planted Date (EC)\": \"10/11/2018\",\n  \"Actual Growth Duration (days)\": 45.0,\n  \"Actual Crop Area (ha)\": 6.0,\n  \"Actual Yield (quintal)\": 5.0,\n  \"Cultivation Type\": \"Combine Harvester\",\n  \"Land Preparation\": [\n    \"Tractor Disc/Moldboard Plough\"\n  ],\n  \"Seed Type\": \"Local\",\n  \"Seed Source\": \"Government / Woreda Agriculture Office\",\n  \"Actual Seed Quantity (kg)\": 80.0,\n  \"Actual Fertilizer Type\": \"Organic\",\n  \"Actual Fertilizer Quantity (kg)\": 50.0,\n  \"Pest Occurrence\": \"Yes\",\n  \"Weed Occurrence\": \"No\",\n  \"Pest Details\": [\n    {\n      \"Pest Type\": \"Insect Pests\",\n      \"Pest Name\": \"Aphids\",\n      \"Method of Control\": \"Sprayer\",\n      \"Pesticide Type\": \"Avicide\",\n      \"Pesticide Name\": \"Avitrol\",\n      \"Frequency of Application\": \"Bi-Weekly\"\n    }\n  ],\n  \"Water Resources\": [\n    {\n      \"Water Resource\": \"Irrigation - Ground Water\",\n      \"Method\": \"Sprinker\",\n      \"Frequency\": \"Weekly\"\n    }\n  ],\n  \"Surveyor Name\": \"Abebe Kebede\",\n  \"Surveyor Mobile Number\": \"+251911000000\",\n  \"Supervisor Name\": \"Sara Alemu\",\n  \"Supervisor Mobile Number\": \"+251911000001\",\n  \"First approvel status\": \"Pending\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/actualinput/v1/create",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "actualinput",
+        "v1",
+        "create"
+       ]
+      }
+     }
+    },
+    {
+     "name": "search",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"pageNumber\": 0,\n  \"pageSize\": 10\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/actualinput/v1/search",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "actualinput",
+        "v1",
+        "search"
+       ]
+      }
+     }
+    },
+    {
+     "name": "read",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/actualinput/v1/read/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "actualinput",
+        "v1",
+        "read",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "actualinput-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete",
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/actualinput/v1/delete/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "actualinput",
+        "v1",
+        "delete",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "actualinput-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "import",
+     "request": {
+      "method": "POST",
+      "header": [],
+      "body": {
+       "mode": "formdata",
+       "formdata": [
+        {
+         "key": "file",
+         "type": "file",
+         "src": "",
+         "description": "CSV or XLSX file to import (max 5MB). Column headers must match schema property names exactly."
+        }
+       ]
+      },
+      "url": {
+       "raw": "{{baseUrl}}/actualinput/v1/import",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "actualinput",
+        "v1",
+        "import"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "sowingdetails",
+   "description": "Sowing Details (Sowing tab)",
+   "item": [
+    {
+     "name": "create",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"Land ID\": \"RU/12/12/123/12345\",\n  \"Cluster Status\": \"Independent\",\n  \"Sowing Status\": \"Sown\",\n  \"Area Sown (ha)\": 6.0,\n  \"Pest / Disease Occurrence\": true,\n  \"Pest / Disease Details\": [\n    {\n      \"Incident Record ID\": \"PI/2026/00002\",\n      \"Growth Stage\": \"Emergence / Seedling\",\n      \"Type of Infestation\": \"Disease\",\n      \"Severity Level\": \"Low\"\n    }\n  ],\n  \"Surveyor Name\": \"Abebe Kebede\",\n  \"Surveyor Mobile Number\": \"+251911000000\",\n  \"Supervisor Name\": \"Sara Alemu\",\n  \"Supervisor Mobile Number\": \"+251911000001\",\n  \"First approvel status\": \"Pending\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/sowingdetails/v1/create",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "sowingdetails",
+        "v1",
+        "create"
+       ]
+      }
+     }
+    },
+    {
+     "name": "search",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"pageNumber\": 0,\n  \"pageSize\": 10\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/sowingdetails/v1/search",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "sowingdetails",
+        "v1",
+        "search"
+       ]
+      }
+     }
+    },
+    {
+     "name": "read",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/sowingdetails/v1/read/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "sowingdetails",
+        "v1",
+        "read",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "sowingdetails-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete",
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/sowingdetails/v1/delete/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "sowingdetails",
+        "v1",
+        "delete",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "sowingdetails-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "import",
+     "request": {
+      "method": "POST",
+      "header": [],
+      "body": {
+       "mode": "formdata",
+       "formdata": [
+        {
+         "key": "file",
+         "type": "file",
+         "src": "",
+         "description": "CSV or XLSX file to import (max 5MB). Column headers must match schema property names exactly."
+        }
+       ]
+      },
+      "url": {
+       "raw": "{{baseUrl}}/sowingdetails/v1/import",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "sowingdetails",
+        "v1",
+        "import"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "harvestingdetails",
+   "description": "Harvesting Details (Harvesting tab)",
+   "item": [
+    {
+     "name": "create",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"Land ID\": \"RU/12/12/123/12345\",\n  \"Cluster Status\": \"Independent\",\n  \"Crop Maturity Status\": \"Ready for Harvest\",\n  \"Harvest Date\": \"07/18/2026\",\n  \"Area Harvested (ha)\": 6.0,\n  \"Quantity Harvested (quintal)\": 4.0,\n  \"Post-harvest Loss (%)\": 25.0,\n  \"Quantity Stored\": 2.0,\n  \"Quantity Sold\": 3.0,\n  \"Yield (kg/ha)\": 66.67,\n  \"Yield Performance (%)\": 100.0,\n  \"Fertilizer Efficiency\": 8.0,\n  \"Land Utilization Rate\": 1.0,\n  \"Seed Productivity\": 5.0,\n  \"Surveyor Name\": \"Abebe Kebede\",\n  \"Surveyor Mobile Number\": \"+251911000000\",\n  \"Supervisor Name\": \"Sara Alemu\",\n  \"Supervisor Mobile Number\": \"+251911000001\",\n  \"First approvel status\": \"Pending\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/harvestingdetails/v1/create",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "harvestingdetails",
+        "v1",
+        "create"
+       ]
+      }
+     }
+    },
+    {
+     "name": "search",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"pageNumber\": 0,\n  \"pageSize\": 10\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/harvestingdetails/v1/search",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "harvestingdetails",
+        "v1",
+        "search"
+       ]
+      }
+     }
+    },
+    {
+     "name": "read",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/harvestingdetails/v1/read/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "harvestingdetails",
+        "v1",
+        "read",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "harvestingdetails-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete",
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/harvestingdetails/v1/delete/:id",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "harvestingdetails",
+        "v1",
+        "delete",
+        ":id"
+       ],
+       "variable": [
+        {
+         "key": "id",
+         "value": "harvestingdetails-123",
+         "description": "primary id returned by the create response"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "import",
+     "request": {
+      "method": "POST",
+      "header": [],
+      "body": {
+       "mode": "formdata",
+       "formdata": [
+        {
+         "key": "file",
+         "type": "file",
+         "src": "",
+         "description": "CSV or XLSX file to import (max 5MB). Column headers must match schema property names exactly."
+        }
+       ]
+      },
+      "url": {
+       "raw": "{{baseUrl}}/harvestingdetails/v1/import",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "harvestingdetails",
+        "v1",
+        "import"
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

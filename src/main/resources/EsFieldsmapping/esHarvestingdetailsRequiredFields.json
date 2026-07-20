@@ -1,0 +1,62 @@
+{
+    "Harvesting Details Id": {
+        "type": "keyword"
+    },
+    "Land ID": {
+        "type": "keyword"
+    },
+    "Cluster Status": {
+        "type": "keyword"
+    },
+    "Crop Maturity Status": {
+        "type": "keyword"
+    },
+    "Harvest Date": {
+        "type": "keyword"
+    },
+    "Area Harvested (ha)": {
+        "type": "float"
+    },
+    "Quantity Harvested (quintal)": {
+        "type": "float"
+    },
+    "Post-harvest Loss (%)": {
+        "type": "float"
+    },
+    "Quantity Stored": {
+        "type": "float"
+    },
+    "Quantity Sold": {
+        "type": "float"
+    },
+    "Yield (kg/ha)": {
+        "type": "float"
+    },
+    "Yield Performance (%)": {
+        "type": "float"
+    },
+    "Fertilizer Efficiency": {
+        "type": "float"
+    },
+    "Land Utilization Rate": {
+        "type": "float"
+    },
+    "Seed Productivity": {
+        "type": "float"
+    },
+    "Surveyor Name": {
+        "type": "keyword"
+    },
+    "Surveyor Mobile Number": {
+        "type": "keyword"
+    },
+    "Supervisor Name": {
+        "type": "keyword"
+    },
+    "Supervisor Mobile Number": {
+        "type": "keyword"
+    },
+    "First approvel status": {
+        "type": "keyword"
+    }
+}

@@ -1,0 +1,91 @@
+{
+    "Planned Input Id": {
+        "type": "keyword"
+    },
+    "Land ID": {
+        "type": "keyword"
+    },
+    "Plot Category": {
+        "type": "keyword"
+    },
+    "Season": {
+        "type": "keyword"
+    },
+    "Crop": {
+        "type": "keyword"
+    },
+    "Crop Category": {
+        "type": "keyword"
+    },
+    "Crop Variety": {
+        "type": "keyword"
+    },
+    "Cropping System": {
+        "type": "keyword"
+    },
+    "Planned Date (GC)": {
+        "type": "keyword"
+    },
+    "Planned Date (EC)": {
+        "type": "keyword"
+    },
+    "Average Growth Duration (days)": {
+        "type": "float"
+    },
+    "Planned Crop Area (ha)": {
+        "type": "float"
+    },
+    "Expected Yield (quintals)": {
+        "type": "float"
+    },
+    "Seed Type": {
+        "type": "keyword"
+    },
+    "Seed Source": {
+        "type": "keyword"
+    },
+    "Planned Seed Quantity (kg)": {
+        "type": "float"
+    },
+    "Planned Fertilizer Type": {
+        "type": "keyword"
+    },
+    "Planned Fertilizer Quantity (kg)": {
+        "type": "float"
+    },
+    "Planned Labor": {
+        "type": "integer"
+    },
+    "Water Resources": {
+        "type": "nested",
+        "properties": {
+            "Water Resource": {
+                "type": "keyword"
+            },
+            "Method": {
+                "type": "keyword"
+            },
+            "Frequency": {
+                "type": "keyword"
+            }
+        }
+    },
+    "Cluster Farming Done Earlier": {
+        "type": "keyword"
+    },
+    "Surveyor Name": {
+        "type": "keyword"
+    },
+    "Surveyor Mobile Number": {
+        "type": "keyword"
+    },
+    "Supervisor Name": {
+        "type": "keyword"
+    },
+    "Supervisor Mobile Number": {
+        "type": "keyword"
+    },
+    "First approvel status": {
+        "type": "keyword"
+    }
+}

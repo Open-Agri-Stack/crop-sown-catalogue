@@ -109,8 +109,11 @@ Thumbs.db
 
 #===== ref files ====
 registry document/
-catalogue-data/
+catalogue_data/
 
 
 #===== ide files ====
 CLAUDE.md
+
+#===== Security files ====
+*.pem

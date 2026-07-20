@@ -1,112 +1,122 @@
-# Agri Catalogue Service
+# Crop Sown Catalogue Service
 
-A Spring Boot microservice that manages and serves agricultural catalogue data — crops, livestock, soil, season, and related agri-input entities — backed by Elasticsearch for fast search and retrieval.
+A Spring Boot microservice that manages the catalogue data behind the **Crop Sown Registry** — the planning, cultivation, sowing and harvesting records captured for each farmer's plot — backed by PostgreSQL as the system of record, Elasticsearch for search, and Redis for caching.
 
 ## Overview
 
-The Agri Catalogue Service is part of the **OpenAgriStack** ecosystem. It exposes REST APIs to create, search, and manage reference/catalogue data used across the platform, such as crop types, crop categories, crop varieties, seeds, livestock, soil types, seasons, extension equipment, pesticides, insecticides, fertilizers, and locations.
+The Crop Sown Catalogue Service (`csr`) is part of the **OpenAgriStack** ecosystem. The Crop Sown Registry form has four tabs, and each tab's add-record popup maps 1:1 to a catalogue served by this service:
 
-## Features
+| Catalogue (entity) | Registry tab | Popup form |
+|---|---|---|
+| `plannedinput` | Planning | Planned Input |
+| `actualinput` | Cultivation / Land Preparation | Actual Input |
+| `sowingdetails` | Sowing | Sowing Details |
+| `harvestingdetails` | Harvesting | Harvesting Details |
 
-- CRUD-style operations for agri catalogue entities
-- Elasticsearch-backed search with configurable index mappings per entity
-- Redis caching for search results with configurable TTL
-- Externalized, per-entity Elasticsearch field configuration via `application.yml`/`application.properties`
+A fifth catalogue (the registry header / farmer identity) is planned.
+
+## How a record flows
+
+1. The request body is validated against the entity's JSON Schema in [`src/main/resources/payloadValidation/`](src/main/resources/payloadValidation/).
+2. A primary id is generated from the schema's `prefix`/`keyLength` definition (e.g. `plannedinput-<12 chars>`).
+3. The record is persisted to PostgreSQL (JPA, system of record).
+4. The record is indexed into Elasticsearch — **only fields whose names appear as top-level keys in the entity's mapping file** in [`src/main/resources/EsFieldsmapping/`](src/main/resources/EsFieldsmapping/) are indexed, so the payload schema and ES mapping must keep exact key parity.
+5. Search results are cached in Redis with a configurable TTL.
+
+Field names in both JSON files are the registry form labels, verbatim. Repeating tables such as Water Resources, Pest Details and Pest / Disease Details are arrays of objects in the payload and `nested` types in the ES mapping.
+
+## API
+
+Every catalogue exposes the same five endpoints under `/<entity>/v1`:
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/<entity>/v1/create` | Validate and create a record |
+| POST | `/<entity>/v1/search` | Search (body: `SearchCriteria` — `pageNumber`, `pageSize`, `searchString`, `filterCriteriaMap`, …) |
+| GET | `/<entity>/v1/read/{id}` | Read a record by its generated id |
+| DELETE | `/<entity>/v1/delete/{id}` | Delete a record by id |
+| POST | `/<entity>/v1/import` | Bulk import from a CSV/XLSX file (multipart `file`, max 5 MB; column headers must match schema property names exactly) |
+
+With four catalogues that is 20 endpoints in total. A ready-to-use Postman collection with sample payloads for all of them is included at the repo root: [`crop-sown-catalogue.postman_collection.json`](crop-sown-catalogue.postman_collection.json) (collection variable `baseUrl` defaults to `http://localhost:8080`).
 
 ## Tech Stack
 
-- **Java** (Spring Boot)
-- **Elasticsearch** — primary search/data store for catalogue entities
-- **Redis** — caching layer for search results
-- **Maven/Gradle** — build tooling
-- **Lombok** — boilerplate reduction
-
-## Supported Entities
-
-- Seed
-- Crop Type
-- Crop Category
-- Crop Variety
-- Livestock
-- Season
-- Soil
-- Extension Equipment
-- Pesticide
-- Insecticide
-- Fertilizer
-- Location
+- **Java 17 / Spring Boot 3.3.5** (Maven, Lombok)
+- **PostgreSQL** — system of record
+- **Elasticsearch 8** — search index, per-entity field mappings
+- **Redis** — search-result cache
+- **Python 3.12** — `main.py` scaffolding CLI for new catalogues
 
 ## Getting Started
 
 ### Prerequisites
 
-- Java 11+ (or the version specified in `pom.xml`/`build.gradle`)
-- Maven or Gradle
-- A running Elasticsearch instance
-- A running Redis instance
+- Java 17 and Maven (or use the bundled `./mvnw`)
+- Docker (for local infrastructure)
 
-### Configuration
-
-Update `application.yml`/`application.properties` with your environment-specific values, including:
-
-- Elasticsearch connection settings (host/port)
-- Redis connection settings and `spring.redis.cacheTtl`
-- Per-entity Elasticsearch JSON field path properties (e.g. `elastic.required.field.<entity>.json.path`)
-
-### Build
+### Local infrastructure
 
 ```bash
-# Maven
-mvn clean install
-
-# Gradle
-./gradlew build
+docker compose up -d
 ```
 
-### Run
+This starts everything the service needs, with ports matching the defaults in `application.properties`:
+
+| Service | Port | Notes |
+|---|---|---|
+| PostgreSQL 16 | 5433 | db `csr_db`, user `csr_user` |
+| Redis 7 | 6379 | |
+| Elasticsearch 8.13 | 9200 | user `elastic` |
+| pgAdmin | 5050 | admin UI |
+| Redis Commander | 8081 | admin UI |
+| Kibana | 5601 | admin UI |
+
+Connection settings can be overridden via environment variables (`SPRING_DATASOURCE_URL`, `SPRING_REDIS_HOST`, `ELASTICSEARCH_HOST`, …) — see `src/main/resources/application.properties`.
+
+### Build & run
 
 ```bash
-# Maven
-mvn spring-boot:run
-
-# Gradle
-./gradlew bootRun
+./mvnw clean install
+./mvnw spring-boot:run
 ```
 
-### Seeding Catalogue Entities
+The service starts on port `8080`.
 
-A helper script is included to create catalogue entities in bulk:
+## Adding a new catalogue
+
+Catalogues are scaffolded with the Python CLI (uses the templates in [`registry_template/`](registry_template/)):
 
 ```bash
-./createEntities.sh
+python3 main.py --action create --name <entityname>
+# e.g. the existing four:
+python3 main.py --action create --name plannedinput,actualinput,sowingdetails,harvestingdetails
 ```
 
-This loops through the supported entity list and invokes the catalogue creation command for each.
+This generates the controller/entity/repository/service classes, stub `payloadValidation` and `EsFieldsmapping` JSONs (skipped if they already exist), and wires the entity into `Constants.java`, `VergProperties.java` and `application.properties`. `--action delete` reverses all of it.
+
+**Naming rule:** use squashed lowercase entity names (`plannedinput`, not `planned-input` or `plannedInput`). Elasticsearch rejects uppercase index names, and the generated index is `<entityname>_index`.
+
+After scaffolding, fill in the two JSON files with the real fields — keep their keys identical, since the ES mapping doubles as the indexing whitelist. `createEntities.sh` / `deleteEntities.sh` wrap the CLI for bulk runs (edit the entity list inside first).
 
 ## Project Structure
 
 ```
-src/main/java/com/catalogue/verg/
-├── core/
-│   └── util/             # Shared configuration and utility classes (e.g. VergProperties)
-├── livestock/
-│   └── service/impl/     # Livestock service implementation
-├── cropCategory/
-│   └── service/impl/     # Crop Category service implementation
-├── cropType/
-│   └── service/impl/     # Crop Type service implementation
-├── cropVariety/
-│   └── service/impl/     # Crop Variety service implementation
-├── soil/
-│   └── service/impl/     # Soil service implementation
-├── seed/
-│   └── service/impl/     # Seed service implementation
-├── extensionservices/
-│   └── service/impl/     # Extension service implementation
-├── fertilizer/
-│   └── service/impl/     # Fertilizer service implementation
-├── location/
-│   └── service/impl/     # Location service implementation           
+├── registry_template/                     # Java templates used by the scaffolder
+├── main.py                                # Catalogue scaffolding CLI (create/delete)
+├── crop-sown-catalogue.postman_collection.json
+├── docker-compose.yml                     # Postgres, Redis, Elasticsearch + admin UIs
+└── src/main/
+    ├── java/com/catalogue/verg/
+    │   ├── core/                          # Shared: cache, config, dto, elasticsearch, exception, logger, service, util
+    │   ├── plannedinput/                  # Planning tab catalogue
+    │   ├── actualinput/                   # Cultivation / Land Preparation tab catalogue
+    │   ├── sowingdetails/                 # Sowing tab catalogue
+    │   └── harvestingdetails/             # Harvesting tab catalogue
+    │       └── controller|entity|repository|service/impl
+    └── resources/
+        ├── application.properties
+        ├── payloadValidation/             # Draft-07 JSON Schemas (request validation + id generation)
+        └── EsFieldsmapping/               # Per-entity ES field mappings (indexing whitelist)
 ```
 
 ## Contributing
@@ -118,4 +128,4 @@ src/main/java/com/catalogue/verg/
 
 ## License
 
-Specify your project license here.
+MIT — see [LICENSE](LICENSE).
